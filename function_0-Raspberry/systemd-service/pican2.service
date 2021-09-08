@@ -1,0 +1,15 @@
+[Unit]
+Description=Configure or stop can0 interface from Pican2 HAT
+DefaultDependencies=no
+After=network-online.target
+Wants=network-online.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/ip link set can0 up type can bitrate 500000
+ExecStop=sudo /sbin/ip link set can0 down
+RemainAfterExit=true
+TimeoutStartSec=5min
