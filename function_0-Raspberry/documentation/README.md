@@ -50,6 +50,6 @@ L'image ainsi créée est telechargeble directement depuis le serveur du GEI [20
 
 ## Installation de ROS
 
-La version de ROS installée sur la carte SD est Kinetic Kame. Pour l'installer, la procedure suivante a été scrupuleusement suivie : [Installing ROS Kinetic on the Raspberry Pi] (http://wiki.ros.org/ROSberryPi/Installing%20ROS%20Kinetic%20on%20the%20Raspberry%20Pi)
+La version de ROS installée sur la carte SD est Kinetic Kame. Pour l'installer, la procedure suivante a été **scrupuleusement** suivie : [Installing ROS Kinetic on the Raspberry Pi] (http://wiki.ros.org/ROSberryPi/Installing%20ROS%20Kinetic%20on%20the%20Raspberry%20Pi)
 
 L'image ainsi créée est telechargeble directement depuis le serveur du GEI [2021-05-07-raspios-buster-armhf-lite-pican2-ros_Kinetic.img.7z] (http://srv-geitp.insa-toulouse.fr/geiflix/rpi-geicar/2021-05-07-raspios-buster-armhf-lite-pican2-ros_Kinetic.img.7z) (RQ: pensez au VPN depuis chez vous)

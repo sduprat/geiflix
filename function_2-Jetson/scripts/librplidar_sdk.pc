@@ -1,0 +1,14 @@
+# Pkg-config description for librplidar_sdk
+
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${prefix}/lib/aarch64-linux-gnu
+includedir=/usr/include
+
+Name: librplidar_sdk
+URL: https://www.slamtec.com/en/Support#rplidar-a-series
+Description: C++ SDK for Slamtec RpLidar
+Version: 1.12.0
+Requires: 
+Libs: -L${libdir} -lrplidar_sdk -lpthread
+Cflags: -I${includedir} 
