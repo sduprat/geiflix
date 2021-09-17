@@ -53,3 +53,29 @@ L'image ainsi créée est telechargeble directement depuis le serveur du GEI [20
 La version de ROS installée sur la carte SD est Kinetic Kame. Pour l'installer, la procedure suivante a été **scrupuleusement** suivie : [Installing ROS Kinetic on the Raspberry Pi] (http://wiki.ros.org/ROSberryPi/Installing%20ROS%20Kinetic%20on%20the%20Raspberry%20Pi)
 
 L'image ainsi créée est telechargeble directement depuis le serveur du GEI [2021-05-07-raspios-buster-armhf-lite-pican2-ros_Kinetic.img.7z] (http://srv-geitp.insa-toulouse.fr/geiflix/rpi-geicar/2021-05-07-raspios-buster-armhf-lite-pican2-ros_Kinetic.img.7z) (RQ: pensez au VPN depuis chez vous)
+
+## Configuration de la raspberry en hotspot Wifi + configuration d'un serveur DHCP
+
+Tutoriel suivi: [Creer un point d'acces Wifi (hostapd)](https://www.framboise314.fr/raspap-creez-votre-hotspot-wifi-avec-un-raspberry-pi-de-facon-express/)
+
+Une fois le script raspAP lancé et la raspberry redemarrée, modifiez les fichiers de config de hostapd et dnsmasq. Les fichiers  se trouve dans le depot sous config/hostapd et config/dnsmasq et doivent etre deposé respectivement dans /etc/hostapd et /etc/dnsmasq.
+
+- Pour Hostapd, les modifications consistent à changer les valeurs des champs ssid (mettez geicar1, par ex) et wpa_passphrase (ici Geicar1234). On peut aussi changer le channel (de 1 à 13)
+- Pour dnsmasq, les modifications consistent a rajouter/modifer les configurations des interfaces reseau dans /etc/dnsmasq.d. Les fichiers de configuration peuvent etre trouvés dans /config/dnsmasq.d et permettent de faire du DHCP sur ETH0 et WLAN0, avec des plage d'IP fixes (pour la jetson par ex).
+
+Après installation de hostapd et dnsmasq, un hotspot wifi est fournis par chaque voiture avec les caracteristiques suivantes:
+
+- ssid: geicar(1-4)
+- pass: Geicar1234
+- Compte d'administration: admin
+- Mot de passe d'administration: secret
+
+De plus, dnsmasq fourni les plages d'adresses suivantes:
+
+- eth0: plage DHCP : 192.168.1.50 -> 192.168.1.250
+        gateway: 192.168.1.1
+
+        Ip Fixe DHCP: 192.168.1.10 (pour une des jetson, a modifer pour les autres)
+
+- wlan0: plage DHCP : 192.168.0.50 -> 192.168.0.250
+         gateway : 192.168.0.1

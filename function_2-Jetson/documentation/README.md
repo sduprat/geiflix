@@ -1,6 +1,6 @@
 # Function 2 - Jetson
 
-Petit blabla sur la Jetson. [URL du site web de nividia](https://developer.nvidia.com/embedded/learn/get-started-jetson-nano-devkit)
+La carte utilisée dans ce projet est une Jetson Nano de Nvidia que l'on nommera par la suite simplement jetson. [URL du site web de nividia](https://developer.nvidia.com/embedded/learn/get-started-jetson-nano-devkit)
 
 ## Creation de la carte SD
 
@@ -75,7 +75,7 @@ A partir de là, pour compiler un programmer (rptest, apr exemple), on peut fair
 
 ## installation du SDK ROS RPLidar
 
-Le support du RPLidar pour ROS se trouve dans le depot wwww, qu'il faut cloner dans le workspace de ROS:
+Le support du RPLidar pour ROS se trouve dans le depot rplidar_ros, qu'il faut cloner dans le workspace de ROS:
 - *cd ~/catkin_ws/*
 - *git clone https://github.com/slamtec/rplidar_ros*
 

@@ -1,4 +1,4 @@
-# Dicovery
+# Function 3 - Ultrasound
 
 ## How to compile with TrueSTUDIO
 
@@ -16,7 +16,6 @@ The following describes how to configure a project on TrueSTUDIO to compile the 
 6. Finally for `hardware debug setting` choose `STLink` then click `Next`.
 7. Do not change anything on the last window (the `debug` and `release` targets must be selected) and click on `Finish`.
 
-
 ### Importing files
 
 1. Delete (right click and then `delete`) the repertories `Drivers` and `src` (which has been automatically created with the project).
@@ -33,7 +32,6 @@ The following describes how to configure a project on TrueSTUDIO to compile the 
 ### Deleting templates
 
 1. Go to the `Drivers -> STM32F3xx_HAL_Driver -> Src` directory and right-click `Resource configuration -> Exclude from Build...` on : `stm32f3xx_hal_msp_template.c`, `stm32f3xx_hal_timebase_rtc_alarm_template.c`, `stm32f3xx_hal_timebase_rtc_wakeup_template.c` and `stm32f3xx_hal_timebase_tim_template.c`.
-
 
 ### Compilation, loading and execution
 
