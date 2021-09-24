@@ -24,6 +24,7 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 
+#include "teseo_liv3f.h"
 #include "iks01a2.h"
 #include "scheduler.h"
 #include "globalvar.h"
@@ -104,7 +105,11 @@ int main(void)
 	/* USER CODE BEGIN 2 */
 
 	if (!IKS01A2_Init()) {
-		while (1); // Sensor doesn't initialize correctly
+		while (1); // IMU doesn't initialize correctly
+	}
+
+	if (TESEO_Init() != GNSS_OK) {
+		while (1); // Gps doesn't initialize correctly
 	}
 
     GLOBVAR_Init();

@@ -8,6 +8,7 @@
 #include "stm32l4xx_hal.h"
 
 #include "globalvar.h"
+#include "teseo_liv3f.h"
 #include "iks01a2.h"
 
 #include <stdio.h>
@@ -71,6 +72,14 @@ void task_get_humidity (void);
 uint32_t counter_task_get_humidity;
 #define PERIOD_TASK_GET_HUMIDITY 100
 
+/*********************************
+ * Task task_update_gps
+ * Periodic: 20hz (50 ms)
+ */
+void task_update_gps (void);
+uint32_t counter_task_update_gps;
+#define PERIOD_TASK_UPDATE_GPS 50
+
 /*
  * @brief  Initialize scheduler counters and flags
  *
@@ -79,12 +88,17 @@ uint32_t SCHEDULER_Init(void) {
 	flag_1ms =0;
 
 	counter_task_send_values=0;
+
+	/* Counter for IMU tasks */
 	counter_task_get_acceleration=0;
 	counter_task_get_rotation=0;
 	counter_task_get_magnetic=0;
 	counter_task_get_pressure=0;
 	counter_task_get_humidity=0;
 	counter_task_get_temperature=0;
+
+	/* Counters for GPS tasks */
+	counter_task_update_gps=0;
 
 	return 1;
 }
@@ -100,6 +114,8 @@ void SCHEDULER_Run(void) {
 		if (flag_1ms!=0)
 		{
 			flag_1ms=0;
+
+			/* increase task counters */
 			counter_task_send_values++;
 			counter_task_get_acceleration++;
 			counter_task_get_rotation++;
@@ -107,6 +123,7 @@ void SCHEDULER_Run(void) {
 			counter_task_get_temperature++;
 			counter_task_get_humidity++;
 			counter_task_get_pressure++;
+			counter_task_update_gps++;
 		}
 
 		if (counter_task_get_acceleration>= PERIOD_TASK_GET_ACCELERATION) {
@@ -137,6 +154,11 @@ void SCHEDULER_Run(void) {
 		if (counter_task_get_pressure>= PERIOD_TASK_GET_PRESSURE) {
 			counter_task_get_pressure=0;
 			task_get_pressure();
+		}
+
+		if (counter_task_update_gps>= PERIOD_TASK_UPDATE_GPS) {
+			counter_task_update_gps=0;
+			task_update_gps();
 		}
 
 		if (counter_task_send_values>= PERIOD_TASK_SEND_VALUES) {
@@ -179,4 +201,8 @@ void task_get_humidity (void) {
 
 void task_get_pressure (void) {
 	IKS01A2_GetPressure(&current_pressure_hPa);
+}
+
+void task_update_gps(void) {
+	TESEO_Update();
 }

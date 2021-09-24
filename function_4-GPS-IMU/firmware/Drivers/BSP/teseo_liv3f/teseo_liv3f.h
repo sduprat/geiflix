@@ -1,12 +1,20 @@
 /**
- ******************************************************************************
- * @file    teseo_liv3f.h
- * @author  SRA
- * @brief   TESEO_LIV3F header driver file
- ******************************************************************************
+ *******************************************************************************
+ * @file    teseo_liv3f_class.h
+ * @author  AST
+ * @version V1.0.0
+ * @date    Jan-2019
+ *
+ *******************************************************************************
  * @attention
  *
- * <h2><center>&copy; COPYRIGHT(c) 2018 STMicroelectronics</center></h2>
+ * <h2><center>&copy; COPYRIGHT(c) 2019 STMicroelectronics</center></h2>
+ *
+ * Licensed under MCD-ST Liberty SW License Agreement V2, (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at:
+ *
+ *        www.st.com/software_license_agreement_liberty_v2
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
@@ -30,240 +38,206 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- ******************************************************************************
+ ********************************************************************************
  */
 
-/* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef TESEO_LIV3F_H
-#define TESEO_LIV3F_H
+#include "stm32l4xx_hal.h"
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+#include "teseo.h"
+#include "gnss_parser.h"
+#include "NMEA_parser.h"
 
-/* Includes ------------------------------------------------------------------*/
-#include "teseo_liv3f_queue.h"
-#include <string.h>
+#define DEFAULT_BUS 0
+#define DEFAULT_I2C NULL
+#define DEFAULT_UART NULL
 
-/** @addtogroup BSP BSP
- * @{
- */
+#define DEFAULT_DEVICE_ADDRESS 0x3A
+#define DEFAULT_DEVICE_PORT 0xFF
 
-/** @addtogroup COMPONENT COMPONENT
- * @{
- */
+#define BUFFER_SIZE 32
+#define MAX_FIELD_LENGTH 30
+#define MAX_STRING_LENGTH 100
+#define MAX_RESPONSE_LENGTH 40
 
-/** @addtogroup TESEO_LIV3F TESEO_LIV3F
- * @{
- */
+#if !defined bool
+typedef uint8_t bool;
+#define false 0
+#define true !false
+#endif /* bool */
 
-/** @defgroup TESEO_LIV3F_Exported_Types TESEO_LIV3F Exported Types
- * @{
- */
-
-typedef int32_t  (*TESEO_LIV3F_Init_Func)(void);
-typedef int32_t  (*TESEO_LIV3F_DeInit_Func)(void);
-typedef int32_t  (*TESEO_LIV3F_Transmit_IT_Func)(uint16_t, uint8_t *, uint16_t);
-typedef int32_t  (*TESEO_LIV3F_Receive_IT_Func)(uint16_t, uint8_t *, uint16_t);
-typedef void     (*TESEO_LIV3F_Reset_Func)(void);
-typedef int32_t  (*TESEO_LIV3F_GetTick_Func)(void);
-typedef void     (*TESEO_LIV3F_ClearOREF_Func)(void);
-
-/**
- * @brief TESEO LIV3F IO Bus structure
- */
 typedef struct
 {
-  TESEO_LIV3F_Init_Func          Init;
-  TESEO_LIV3F_DeInit_Func        DeInit;
-  uint32_t                       BusType; /* 0 means UART, 1 means I2C */
-  uint16_t                       Address; /* I2C only */
-  TESEO_LIV3F_Transmit_IT_Func   Transmit_IT;
-  TESEO_LIV3F_Receive_IT_Func    Receive_IT;
-  TESEO_LIV3F_Reset_Func         Reset;
-  TESEO_LIV3F_GetTick_Func       GetTick;
-  TESEO_LIV3F_ClearOREF_Func     ClearOREF;
-} TESEO_LIV3F_IO_t;
+	char inputString[MAX_STRING_LENGTH];
+	char inputString2[MAX_STRING_LENGTH];
+	bool stringComplete;
+	char inChar[BUFFER_SIZE];
+	int index;
+	int end;
+} I2CHandler;
 
-/**
- * @brief TESEO LIV3F Status structure
- */
 typedef struct
 {
-  unsigned int WakeUpStatus : 1;
-} TESEO_LIV3F_Status_t;
+	char inputString[MAX_STRING_LENGTH];
+	bool stringComplete;
+	int index;
+	int end;
+} UARTHandler;
 
-/**
- * @brief TESEO LIV3F Object Info
- */
-typedef struct
+typedef enum
 {
-  TESEO_LIV3F_IO_t      IO;
-  TESEO_LIV3F_ctx_t     Ctx;
-  TESEO_LIV3F_Queue_t   *pTeseoQueue;
-  uint8_t               is_initialized;
-} TESEO_LIV3F_Object_t;
+	TENS = 0,
+	HUNDREDS,
+	THOUSANDS
+} Decimal_t;
+
+//extern int useI2C = DEFAULT_BUS;
+////extern TwoWire *dev_i2c = DEFAULT_I2C;
+////extern HardwareSerial *dev_uart = DEFAULT_UART;
+//extern int commandDone;
+//extern char compareMessage[MAX_RESPONSE_LENGTH];
+//extern I2CHandler i2ch;
+//extern UARTHandler uarth;
+//extern GNSSParser_Data_t data;
+//extern uint8_t app[MAX_MSG_LEN][MAX_FIELD_LENGTH];
 
 /**
- * @brief TESEO LIV3F Capabilities structure
+ * @brief       Initialize the sensor and the data structures
+ * @note		in case of I2C communication, I2C peripheral should be initialized before calling this function
+ * @return      GNSS_OK on Success
  */
-typedef struct
-{
-  uint8_t   Geofence;
-  uint8_t   Datalog;
-  uint8_t   Odemeter;
-  uint8_t   AssistedGNSS;
-} TESEO_LIV3F_Capabilities_t;
+GNSS_StatusTypeDef TESEO_Init();
 
 /**
- * @brief TESEO LIV3F Driver Instance
+ * @brief       Update the internal data structures of the sensor using the appropriate communication method
+ * @note		To prevent data loss, this function should be called at least 20 times per second
+ * @return      GNSS_OK on Success
  */
-typedef struct
-{
-  int32_t                  (*Init)(TESEO_LIV3F_Object_t *);
-  int32_t                  (*DeInit)(TESEO_LIV3F_Object_t *);
-  const TESEO_LIV3F_Msg_t* (*GetMessage)(const TESEO_LIV3F_Object_t *);
-  int32_t                  (*ReleaseMessage)(const TESEO_LIV3F_Object_t *, const TESEO_LIV3F_Msg_t *);
-  int32_t                  (*Send)(const TESEO_LIV3F_Object_t *, const TESEO_LIV3F_Msg_t *);
-} TESEO_LIV3F_Drv_t;
+GNSS_StatusTypeDef TESEO_Update();
 
 /**
- * @}
+ * @brief       	Send a command to the device
+ * @param command	The command to send
+ * @return      	GNSS_OK on Success
  */
-
-/** @defgroup TESEO_LIV3F_Exported_Constants TESEO_LIV3F Exported Constants
- * @{
- */
-
-#define TESEO_LIV3F_OK                  (0)
-#define TESEO_LIV3F_ERROR               (-1)
-
-#define TESEO_LIV3F_UART_BUS            (0U)
-#define TESEO_LIV3F_I2C_BUS             (1U)
-
-#define TESEO_LIV3F_I2C_7BITS_ADDR      0x3A
+GNSS_StatusTypeDef TESEO_SendCommand(char *command);
 
 /**
- * @}
+ * @brief    	    Ask the device for a specific message
+ * @param message	The message to recieve
+ * @return   	    GNSS_OK on Success
  */
-
-/** @addtogroup TESEO_LIV3F_Exported_Functions TESEO_LIV3F Exported Functions
- * @{
- */
+GNSS_StatusTypeDef TESEO_AskMessage(char* message);
 
 /**
- * @brief  Register Component Bus IO operations
- * @param  pObj the device pObj
- * @retval 0 in case of success, an error code otherwise
+ * @brief       Ask the device if the message requested by @a askMessage() was recieved
+ * @return      1 if the message was recieved, 0 otherwise
  */
-int32_t                  TESEO_LIV3F_RegisterBusIO(TESEO_LIV3F_Object_t *pObj, TESEO_LIV3F_IO_t *pIO);
+int TESEO_GetMessageDone ();
 
 /**
- * @brief  Initialize the TESEO component
- * @param  pObj the device pObj
- * @retval 0 in case of success, an error code otherwise
+ * @brief       Get the complete data structure
+ * @return      The full data structure
  */
-int32_t                  TESEO_LIV3F_Init(TESEO_LIV3F_Object_t *pObj);
+GNSSParser_Data_t TESEO_GetData();
 
 /**
- * @brief  Deinitialize the TESEO component
- * @param  pObj the device pObj
- * @retval 0 in case of success, an error code otherwise
+ * @brief       Get the wakeup status of the device
+ * @return      1 if the device is enabled, 0 otherwise
  */
-int32_t                  TESEO_LIV3F_DeInit(TESEO_LIV3F_Object_t *pObj);
+int TESEO_GetWakeupStatus();
 
 /**
- * @brief  Get the NMEA message coming from the TESEO component
- * @param  pObj the device pObj
- * @retval The message buffer
+ * @brief       Get the GPGGA coordinates
+ * @return      The coordinates structure
  */
-const TESEO_LIV3F_Msg_t* TESEO_LIV3F_GetMessage(const TESEO_LIV3F_Object_t *pObj);
+Coords_t TESEO_GetCoords();
 
 /**
- * @brief  Release the NMEA message buffer
- * @param  pObj the device pObj
- * @param  Message The message buffer
- * @retval 0 in case of success, an error code otherwise
+ * @brief       Get the debug status of the device
+ * @return      DEBUG_ON if debug is enabled, DEBUG_OFF otherwise
  */
-int32_t                  TESEO_LIV3F_ReleaseMessage(const TESEO_LIV3F_Object_t *pObj, const TESEO_LIV3F_Msg_t *Message);
+Debug_State TESEO_GetDebugStatus ();
 
 /**
- * @brief  Send a command to the TESEO compenent
- * @param  pObj the device pObj
- * @param  Message The message buffer
- * @retval 0 in case of success, an error code otherwise
+ * @brief       Get the GPGGA message data structure
+ * @return      The required data structure
  */
-int32_t                  TESEO_LIV3F_Send(const TESEO_LIV3F_Object_t *pObj, const TESEO_LIV3F_Msg_t *Message);
+GPGGA_Info_t TESEO_GetGPGGAData();
 
 /**
- * @brief  Implement the API driver function to start (or resume after a given timeout) communication via I2C.
- * @retval none
+ * @brief       Get the --GNS message data structure
+ * @return      The required data structure
  */
-void                     TESEO_LIV3F_I2C_BackgroundProcess(void);
-
-/* I2C callbacks */
-/**
- * @brief  I2C Rx completion handler
- * @retval none
- */
-void TESEO_LIV3F_I2C_RxCb(void);
+GNS_Info_t TESEO_GetGNSData ();
 
 /**
- * @brief  I2C Rx Error handler
- * @retval none
+ * @brief       Get the GPGTS message data structure
+ * @return      The required data structure
  */
-void TESEO_LIV3F_I2C_ErrorCb(void);
+GPGST_Info_t TESEO_GetGPGSTData();
 
 /**
- * @brief  I2C Rx Abort handler
- * @retval none
+ * @brief       Get the GPRMC message data structure
+ * @return      The required data structure
  */
-void TESEO_LIV3F_I2C_AbortCb(void);
-
-/* UART callbacks */
-/**
- * @brief  UART Rx completion handler
- * @retval none
- */
-void TESEO_LIV3F_UART_RxCb(void);
+GPRMC_Info_t TESEO_GetGPRMCData ();
 
 /**
- * @brief  UART Rx Error handler
- * @retval none
+ * @brief       Get the --GSA message data structure
+ * @return      The required data structure
  */
-void TESEO_LIV3F_UART_ErrorCb(void);
+GSA_Info_t TESEO_GetGSAData ();
 
 /**
- * @}
+ * @brief       Get the --GSV message data structure
+ * @return      The required data structure
  */
-
-/** @addtogroup TESEO_LIV3F_Exported_Variables TESEO_LIV3F Exported Variables
- * @{
- */
-
-extern TESEO_LIV3F_Drv_t TESEO_LIV3F_Driver;
+GSV_Info_t TESEO_GetGSVData ();
 
 /**
- * @}
+ * @brief       Get the PSTMVER message data structure
+ * @return      The required data structure
  */
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
+PSTMVER_Info_t TESEO_GetVERData ();
 
 /**
- * @}
+ * @brief       Get the PSTMPASSRTN message data structure
+ * @return      The required data structure
  */
+PSTMPASSRTN_Info_t TESEO_GetPASSData ();
 
 /**
- * @}
+ * @brief       Get the PSTMAGPS message data structure
+ * @return      The required data structure
  */
+PSTMAGPS_Info_t TESEO_GetAGPSData ();
 
 /**
- * @}
+ * @brief       Get the Geofence message data structure
+ * @return      The required data structure
  */
+Geofence_Info_t TESEO_GetGeofenceData ();
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+/**
+ * @brief       Get the Odometer message data structure
+ * @return      The required data structure
+ */
+Odometer_Info_t TESEO_GetOdometerData ();
+
+/**
+ * @brief       Get the Datalog structure
+ * @return      The required data structure
+ */
+Datalog_Info_t TESEO_GetDatalogData ();
+/**
+ * @brief       Get the result of the last command sent
+ * @return      GNSS_OP_OK if it was a success, GNSS_OP_ERROR otherwise
+ */
+OpResult_t TESEO_GetResult ();
+
+/**
+ * @brief       Activate/deactivate the debug flag
+ * @return      The current state of the debug flag
+ */
+Debug_State TESEO_ToggleDebug();
+
