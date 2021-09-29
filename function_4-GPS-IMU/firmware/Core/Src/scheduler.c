@@ -80,6 +80,16 @@ void task_update_gps (void);
 uint32_t counter_task_update_gps;
 #define PERIOD_TASK_UPDATE_GPS 50
 
+/*********************************
+ * Task task_get_gps_coord
+ * Periodic: 20hz (50 ms)
+ */
+void task_get_gps_coord(void);
+uint32_t counter_task_get_gps_coord;
+#define PERIOD_TASK_GET_GPS_COORD 50
+
+void task_background(void);
+
 /*
  * @brief  Initialize scheduler counters and flags
  *
@@ -99,7 +109,7 @@ uint32_t SCHEDULER_Init(void) {
 
 	/* Counters for GPS tasks */
 	counter_task_update_gps=0;
-
+	counter_task_get_gps_coord=0;
 	return 1;
 }
 
@@ -124,6 +134,7 @@ void SCHEDULER_Run(void) {
 			counter_task_get_humidity++;
 			counter_task_get_pressure++;
 			counter_task_update_gps++;
+			counter_task_get_gps_coord++;
 		}
 
 		if (counter_task_get_acceleration>= PERIOD_TASK_GET_ACCELERATION) {
@@ -161,11 +172,22 @@ void SCHEDULER_Run(void) {
 			task_update_gps();
 		}
 
+		if (counter_task_get_gps_coord>= PERIOD_TASK_GET_GPS_COORD) {
+			counter_task_get_gps_coord=0;
+			task_get_gps_coord();
+		}
+
 		if (counter_task_send_values>= PERIOD_TASK_SEND_VALUES) {
 			counter_task_send_values=0;
 			task_send_values();
 		}
+
+		task_background();
 	}
+}
+
+void task_background(void) {
+
 }
 
 void task_send_values (void) {
@@ -175,8 +197,9 @@ void task_send_values (void) {
 			current_angular_rate_mdps.x, current_angular_rate_mdps.y, current_angular_rate_mdps.z);
 	printf("Mag: x=%4.2f\ty=%4.2f\tz=%4.2f\r\n",
 			current_magnetic_mG.x, current_magnetic_mG.y, current_magnetic_mG.z);
-	printf("T°:%3.2f\r\nPres=%6.2f\r\nHum=%3.2f%%\r\n\r\n",
+	printf("T°:%3.2f\r\nPres=%6.2f\r\nHum=%3.2f%%\r\n",
 			current_temperature_degC, current_pressure_hPa, current_humidity_perc);
+	printf("lon=%2.5f\tlat=%2.5f\talt=%2.2f\r\n\r\n", current_coords.lon, current_coords.lat, current_coords.alt);
 }
 
 void task_get_acceleration (void) {
@@ -205,4 +228,8 @@ void task_get_pressure (void) {
 
 void task_update_gps(void) {
 	TESEO_Update();
+}
+
+void task_get_gps_coord(void) {
+	current_coords=TESEO_GetCoords_DD();
 }

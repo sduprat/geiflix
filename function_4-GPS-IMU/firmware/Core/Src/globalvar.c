@@ -20,6 +20,7 @@ float current_pressure_hPa;
 float current_temperature_degC;
 float current_humidity_perc;
 
+Coords_t current_coords;
 /*
  * @brief  Initialization of global variables
  *
@@ -40,4 +41,11 @@ void GLOBVAR_Init(void) {
 	current_magnetic_mG.x=0.0;
 	current_magnetic_mG.y=0.0;
 	current_magnetic_mG.z=0.0;
+
+	current_coords.alt=0.0;
+	current_coords.ew=0;
+	current_coords.lat=0.0;
+	current_coords.lon=0.0;
+	current_coords.mis=0;
+	current_coords.ns=0;
 }

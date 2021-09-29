@@ -9,6 +9,7 @@
 #define INC_GLOBALVAR_H_
 
 #include "iks01a2.h"
+#include "teseo_liv3f.h"
 
 extern CAN_HandleTypeDef hcan1;
 extern I2C_HandleTypeDef hi2c1;
@@ -20,6 +21,8 @@ extern values3d_t current_magnetic_mG;
 extern float current_pressure_hPa;
 extern float current_temperature_degC;
 extern float current_humidity_perc;
+
+extern Coords_t current_coords;
 
 #define COM_POLL_TIMEOUT 1000
 

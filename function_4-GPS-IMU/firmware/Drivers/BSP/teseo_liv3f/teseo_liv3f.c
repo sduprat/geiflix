@@ -44,9 +44,10 @@
 #include "stm32l4xx_hal.h"
 
 #include <stdlib.h>
-#include "teseo_liv3f.h"
-
+#include <math.h>
 #include <string.h>
+
+#include "teseo_liv3f.h"
 #include "globalvar.h"
 
 /*
@@ -57,32 +58,47 @@
 
 #define MAX_TRANSFER_SIZE 200
 
-static int useI2C = DEFAULT_BUS;
 //TwoWire *dev_i2c = DEFAULT_I2C;
 //HardwareSerial *dev_uart = DEFAULT_UART;
 static int commandDone;
 static char compareMessage[MAX_RESPONSE_LENGTH];
-static I2CHandler i2ch;
-//static UARTHandler uarth;
+
+#if defined (TESEO_USE_I2C)
+I2CHandler i2ch;
+#else
+#define MAX_DMA_BUFFER_SIZE 512
+UART_HandleTypeDef huart1;
+UARTHandler uarth;
+DMA_HandleTypeDef hdma_usart1_rx;
+
+uint8_t uart_dma_buffer[MAX_DMA_BUFFER_SIZE];
+uint32_t buffer_end;
+uint32_t buffer_index;
+#endif /* TESEO_USE_I2C */
+
 static GNSSParser_Data_t data;
 static uint8_t app[MAX_MSG_LEN][MAX_FIELD_LENGTH];
+static Coords_t xyz_coords_dd;
 
-static void MSP_TESEO_GPIOInit(void);
-static void TESEO_ResetChip(void);
+static void MSP_TESEO_Init(void);
 
+#if defined (TESEO_USE_I2C)
 /**
  * @brief       Update the internal data structures of the sensor using I2C communication
  * @return      GNSS_OK on Success
  */
 static GNSS_StatusTypeDef TESEO_I2CUpdate();
+#endif /* TESEO_USE_I2C */
 
+#if defined (TESEO_USE_UART)
 /**
  * @brief       Update the internal data structures of the sensor using UART communication
  * @return      GNSS_OK on Success
  */
-/* TODO UART Non supporté */
-//static GNSS_StatusTypeDef UARTUpdate();
+static GNSS_StatusTypeDef TESEO_UARTUpdate();
+#endif /* TESEO_USE_UART */
 
+#if defined (TESEO_USE_I2C)
 /**
  * @brief       	Sends the string to the I2C device
  * @param strToWr	The string to write
@@ -99,7 +115,10 @@ static GNSS_StatusTypeDef platform_RdWord(char *data);
 
 static GNSS_StatusTypeDef platform_I2CRead(uint16_t RegisterAddr, uint8_t* pBuffer, uint16_t NumByteToRead);
 static GNSS_StatusTypeDef platform_I2CWrite(uint16_t RegisterAddr, uint8_t* pBuffer, uint16_t NumByteToWrite);
-
+//#else
+//static GNSS_StatusTypeDef platform_UARTRead(uint8_t* pBuffer, uint16_t NumByteToRead);
+//static GNSS_StatusTypeDef platform_UARTWrite(uint8_t* pBuffer, uint16_t NumByteToWrite);
+#endif /* TESEO_USE_I2C */
 
 /**
  * @brief  This function initializes the agent handling parsed GNSS data
@@ -291,23 +310,27 @@ static uint32_t NMEA_Char2int(uint8_t c);
  */
 GNSS_StatusTypeDef TESEO_Init()
 {
-	MSP_TESEO_GPIOInit();
+	MSP_TESEO_Init();
+	TESEO_WakeupChip();
+	TESEO_ResetChip();
 
-	useI2C = 1;
+#if defined (TESEO_USE_I2C)
 	i2ch.stringComplete = false;
 	i2ch.index = 0;
 	i2ch.end = 0;
+#else
+	uarth.stringComplete=false;
+	uarth.index=0;
+	uarth.end =0;
+#endif /* TESEO_USE_I2C */
 	commandDone = 1;
-
-	TESEO_ResetChip();
 
 	GNSS_PARSER_Init(&data);
 
-	if (useI2C)
-	{
-		memset(i2ch.inputString, 0, MAX_STRING_LENGTH);
-		memset(i2ch.inputString2, 0, MAX_STRING_LENGTH);
-	}
+#if defined (TESEO_USE_I2C)
+	memset(i2ch.inputString, 0, MAX_STRING_LENGTH);
+	memset(i2ch.inputString2, 0, MAX_STRING_LENGTH);
+#endif /* TESEO_USE_I2C */
 
 	TESEO_SendCommand((char *)"$PSTMRESTOREPAR");
 	TESEO_SendCommand((char *)"$PSTMSRR");
@@ -323,12 +346,13 @@ GNSS_StatusTypeDef TESEO_Init()
  */
 GNSS_StatusTypeDef TESEO_Update()
 {
-	if (useI2C)
-		return TESEO_I2CUpdate();
-	else
-		/* TODO UART non supporté */
-		//return UARTUpdate();
-		return GNSS_TIMEOUT;
+#if defined (TESEO_USE_I2C)
+	return TESEO_I2CUpdate();
+#else
+	return TESEO_UARTUpdate();
+#endif /* TESEO_USE_I2C */
+
+	return GNSS_TIMEOUT;
 }
 
 /**
@@ -338,20 +362,19 @@ GNSS_StatusTypeDef TESEO_Update()
  */
 GNSS_StatusTypeDef TESEO_SendCommand(char *command)
 {
-	if (useI2C)
-		platform_WrWord(command);
-	else
-	{
-		/* TODO Uart a completer*/
-		//dev_uart->print(command);
-		//dev_uart->print("\r\n");
-	}
+#if defined (TESEO_USE_I2C)
+	platform_WrWord(command);
+#else
+	HAL_UART_Transmit(&huart1, (uint8_t*)command, strlen(command), 1000);
+	HAL_UART_Transmit(&huart1, (uint8_t*)"\r\n", 2, 1000);
+#endif /* TESEO_USE_I2C */
+
 	return GNSS_OK;
 }
 
 /**
  * @brief    	    Ask the device for a specific message
- * @param message	The message to recieve
+ * @param message	The message to receive
  * @return   	    GNSS_OK on Success
  */
 GNSS_StatusTypeDef TESEO_AskMessage(char* message)
@@ -364,7 +387,7 @@ GNSS_StatusTypeDef TESEO_AskMessage(char* message)
 
 /**
  * @brief       Ask the device if the message requested by @a askMessage() was recieved
- * @return      1 if the message was recieved, 0 otherwise
+ * @return      1 if the message was received, 0 otherwise
  */
 int TESEO_GetMessageDone ()
 {
@@ -393,10 +416,51 @@ int TESEO_GetWakeupStatus()
 /**
  * @brief       Get the GPGGA coordinates
  * @return      The coordinates structure
+ * @remark      Coordinates are given in Decimal Degree Minute (DMM) (also known as GPS format)
+ * @remark      See google :https://support.google.com/maps/answer/18539?hl=fr&co=GENIE.Platform%3DAndroid)
  */
-Coords_t TESEO_GetCoords()
+Coords_t TESEO_GetCoords_DMM()
 {
 	return data.gpgga_data.xyz;
+}
+
+/**
+ * @brief       Get the GPGGA coordinates in DD
+ * @return      The coordinates structure
+ * @remark      Convert coordinates in Decimal Degree Minute (DMM) to Decimal Degree (DD)
+ */
+Coords_t TESEO_GetCoords_DD()
+{
+	float degrees;
+	float minutes;
+	float tmp;
+
+	memcpy ((void*)&xyz_coords_dd, (void*)&data.gpgga_data.xyz, sizeof(xyz_coords_dd));
+
+	// Convert Latitude
+	// convert DD MM.mmm to DD.MMmmm
+	tmp = data.gpgga_data.xyz.lat/100.0;
+	// Split fractional part (0.MMmmm) from integer part (DD.0)
+	minutes=modff(tmp, &degrees);
+	// Restore integer minutes (0.MMmmm => MM.mmm)
+	minutes = minutes*100.0;
+
+	// Convert to decimal degree (DD.ddddd)
+	xyz_coords_dd.lat = degrees+(minutes/60.0);
+
+	// Convert Longitude
+	// convert DD MM.mmm to DD.MMmmm
+	tmp = data.gpgga_data.xyz.lon/100.0;
+	// Split fractional part (0.MMmmm) from integer part (DD.0)
+	minutes=modff(tmp, &degrees);
+	// Restore integer minutes (0.MMmmm => MM.mmm)
+	minutes = minutes*100.0;
+
+	// Convert to decimal degree (DD.ddddd)
+	xyz_coords_dd.lon = degrees+(minutes/60.0);
+
+	// Others fields don't need correction
+	return xyz_coords_dd;
 }
 
 /**
@@ -535,7 +599,10 @@ Debug_State TESEO_ToggleDebug()
 	return data.debug;
 }
 
-static void MSP_TESEO_GPIOInit(void) {
+/**
+ * @brief       Low-level hardware initialisation
+ */
+static void MSP_TESEO_Init(void) {
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 
 	/* GPIO Ports Clock Enable */
@@ -560,16 +627,140 @@ static void MSP_TESEO_GPIOInit(void) {
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+	/* Configure UART1 */
+	__HAL_RCC_USART1_CLK_ENABLE();
+
+	huart1.Instance = USART1;
+	huart1.Init.BaudRate = 9600;
+	huart1.Init.WordLength = UART_WORDLENGTH_8B;
+	huart1.Init.StopBits = UART_STOPBITS_1;
+	huart1.Init.Parity = UART_PARITY_NONE;
+	huart1.Init.Mode = UART_MODE_TX_RX;
+	huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+	huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+	huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+	huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+	if (HAL_UART_Init(&huart1) != HAL_OK)
+	{
+		while (1);
+	}
+
+	/* Configure UART1 GPIO
+	 * PA9: UART1 TX
+	 * PA10: UART1 RX
+	 */
+	/* Configure GPIO pin : Teseo_Reset */
+	GPIO_InitStruct.Pin = GPIO_PIN_9|GPIO_PIN_10;
+	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+	GPIO_InitStruct.Alternate=GPIO_AF7_USART1;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+	/* Enable UART1 RX DMA mode */
+	memset(uart_dma_buffer, 0, MAX_DMA_BUFFER_SIZE);
+	buffer_end=0;
+	buffer_index=0;
+
+	/* USART1 DMA Init */
+	/* USART1_RX Init */
+	__HAL_RCC_DMA1_CLK_ENABLE();
+
+	hdma_usart1_rx.Instance = DMA1_Channel5;
+	hdma_usart1_rx.Init.Request = DMA_REQUEST_2;
+	hdma_usart1_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
+	hdma_usart1_rx.Init.PeriphInc = DMA_PINC_DISABLE;
+	hdma_usart1_rx.Init.MemInc = DMA_MINC_ENABLE;
+	hdma_usart1_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+	hdma_usart1_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+	hdma_usart1_rx.Init.Mode = DMA_CIRCULAR;
+	hdma_usart1_rx.Init.Priority = DMA_PRIORITY_LOW;
+	if (HAL_DMA_Init(&hdma_usart1_rx) != HAL_OK)
+	{
+		while(1);
+	}
+
+	__HAL_LINKDMA(&huart1,hdmarx,hdma_usart1_rx);
+
+	HAL_NVIC_SetPriority(DMA1_Channel5_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(DMA1_Channel5_IRQn);
+
+	/* Initializes Rx sequence using Reception To Idle event API.
+	     As DMA channel associated to UART Rx is configured as Circular,
+	     reception is endless.
+	     If reception has to be stopped, call to HAL_UART_AbortReceive() could be used.
+
+	     Use of HAL_UARTEx_ReceiveToIdle_DMA service, will generate calls to
+	     user defined HAL_UARTEx_RxEventCallback callback for each occurrence of
+	     following events :
+	     - DMA RX Half Transfer event (HT)
+	     - DMA RX Transfer Complete event (TC)
+	     - IDLE event on UART Rx line (indicating a pause is UART reception flow)
+	 */
+	if (HAL_OK != HAL_UARTEx_ReceiveToIdle_DMA(&huart1, uart_dma_buffer, MAX_DMA_BUFFER_SIZE))
+	{
+		while (1);
+	}
 }
 
-static void TESEO_ResetChip(void) {
+#if defined (TESEO_USE_UART)
+void DMA1_Channel5_IRQHandler(void)
+{
+	/* USER CODE BEGIN DMA1_Channel6_IRQn 0 */
+
+	/* USER CODE END DMA1_Channel6_IRQn 0 */
+	HAL_DMA_IRQHandler(&hdma_usart1_rx);
+	/* USER CODE BEGIN DMA1_Channel6_IRQn 1 */
+
+	/* USER CODE END DMA1_Channel6_IRQn 1 */
+}
+
+/**
+ * @brief  User implementation of the Reception Event Callback
+ *         (Rx event notification called after use of advanced reception service).
+ * @param  huart UART handle
+ * @param  Size  Number of data available in application reception buffer (indicates a position in
+ *               reception buffer until which, data are available)
+ * @retval None
+ */
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
+{
+	buffer_end = Size;
+}
+#endif /* TESEO_USE_UART */
+
+/**
+ * @brief       Reset chip and wait 3s
+ */
+void TESEO_ResetChip(void) {
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
-	HAL_Delay(1000);
+	HAL_Delay(100);
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
-	HAL_Delay(5000);
+	HAL_Delay(3000);
 }
 
-GNSS_StatusTypeDef TESEO_I2CUpdate()
+/**
+ * @brief       Wakeup chip from hibernate mode
+ */
+void TESEO_WakeupChip(void) {
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+	HAL_Delay(100);
+}
+
+/**
+ * @brief       Switch chip into hibernate mode
+ */
+void TESEO_HibernateChip(void) {
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+	HAL_Delay(100);
+}
+
+/************************************************************
+ * Private functions
+ ************************************************************/
+#if defined (TESEO_USE_I2C)
+static GNSS_StatusTypeDef TESEO_I2CUpdate()
 {
 	memset (i2ch.inChar, 0, BUFFER_SIZE);
 	platform_RdWord(i2ch.inChar);
@@ -617,124 +808,81 @@ GNSS_StatusTypeDef TESEO_I2CUpdate()
 	}
 	return GNSS_OK;
 }
+#endif /* TESEO_USE_I2C */
 
-/* TODO Uart non supporté */
-//
-//GNSS_StatusTypeDef UARTUpdate()
-//{
-//	if (uarth.stringComplete)
-//	{
-//		uint8_t buffer[MAX_STRING_LENGTH];
-//		memset(buffer, 0, MAX_STRING_LENGTH);
-//		for (int i = 0; i < MAX_STRING_LENGTH; i++)
-//			buffer[i] = (uint8_t) uarth.inputString[i];
-//		GNSSParser_Status_t status = GNSS_PARSER_CheckSanity(buffer, uarth.end);
-//		if (status != GNSS_PARSER_ERROR)
-//		{
-//			if ((commandDone == 0) && (strncmp(compareMessage, (char *) buffer, strlen(compareMessage)) == 0))
-//			{
-//				commandDone = 1;
-//			}
-//			for(int m = 0; m < NMEA_MSGS_NUM; m++)
-//			{
-//				GNSS_PARSER_ParseMsg(&data, (eNMEAMsg)m, buffer);
-//			}
-//		}
-//		memset(uarth.inputString, 0, sizeof(uarth.inputString));
-//		uarth.stringComplete = false;
-//	}
-//
-//	while (dev_uart->available())
-//	{
-//		char inputChar = dev_uart->read();
-//		uarth.inputString[uarth.index]= inputChar;
-//		if (inputChar == '\n')
-//		{
-//			uarth.stringComplete = true;
-//			uarth.end = uarth.index+1;
-//			uarth.index = 0;
-//			break;
-//		}
-//		uarth.index = uarth.index + 1;
-//	}
-//	return GNSS_OK;
-//}
-
-static GNSS_StatusTypeDef platform_WrWord(char *strToWr)
-{
-	GNSS_StatusTypeDef status;
-	uint8_t buffer[MAX_TRANSFER_SIZE];
-	memset (buffer, 0, MAX_TRANSFER_SIZE);
-	strncpy((char *)buffer, strToWr, strlen(strToWr));
-	buffer[strlen(strToWr)] = (uint8_t) '\r';
-	buffer[strlen(strToWr)+1] = (uint8_t) '\n';
-	buffer[strlen(strToWr)+2] = (uint8_t) '\0';
-	status = platform_I2CWrite(DEFAULT_DEVICE_PORT, buffer, strlen((char *)buffer));
-
-	return status;
+#if defined (TESEO_USE_UART)
+static uint32_t plateform_UARTAvailableData(void) {
+	if (buffer_end < buffer_index)
+		return (MAX_DMA_BUFFER_SIZE + buffer_end - buffer_index);
+	else return (buffer_end - buffer_index);
 }
 
-static GNSS_StatusTypeDef platform_RdWord(char *data)
-{
-	GNSS_StatusTypeDef status;
-	uint8_t buffer[MAX_TRANSFER_SIZE];
-	memset(buffer, 0, MAX_TRANSFER_SIZE);
-	status = platform_I2CRead(DEFAULT_DEVICE_PORT, buffer, BUFFER_SIZE-1);
-	if(!status)
-	{
-		for (int i=0; i<BUFFER_SIZE-1; i++)
-		{
-			data[i]= (buffer[i] == 0xFF) ? (char)0x00 : (char) buffer[i];
-		}
+static char plateform_UARTRead(void) {
+	char tmp=0;
+
+	if (plateform_UARTAvailableData()>0) {
+		tmp= uart_dma_buffer[buffer_index];
+		buffer_index++;
+		if (buffer_index>MAX_DMA_BUFFER_SIZE) buffer_index=0;
 	}
-	return status;
+
+	return tmp;
 }
 
+static GNSS_StatusTypeDef TESEO_UARTUpdate()
+{
+	if (uarth.stringComplete)
+	{
+		uint8_t buffer[MAX_STRING_LENGTH];
+		memset(buffer, 0, MAX_STRING_LENGTH);
+		for (int i = 0; i < MAX_STRING_LENGTH; i++)
+			buffer[i] = (uint8_t) uarth.inputString[i];
+		GNSSParser_Status_t status = GNSS_PARSER_CheckSanity(buffer, uarth.end);
+
+		if (status != GNSS_PARSER_ERROR)
+		{
+			if ((commandDone == 0) && (strncmp(compareMessage, (char *) buffer, strlen(compareMessage)) == 0))
+			{
+				commandDone = 1;
+			}
+			for(int m = 0; m < NMEA_MSGS_NUM; m++)
+			{
+				GNSS_PARSER_ParseMsg(&data, (eNMEAMsg)m, buffer);
+			}
+		}
+		memset(uarth.inputString, 0, sizeof(uarth.inputString));
+		uarth.stringComplete = false;
+	}
+
+	/* A revoir */
+	while (plateform_UARTAvailableData())
+	{
+		char inputChar = plateform_UARTRead();
+		uarth.inputString[uarth.index]= inputChar;
+		if (inputChar == '\n')
+		{
+			uarth.stringComplete = true;
+			uarth.end = uarth.index+1;
+			uarth.index = 0;
+			break;
+		}
+		uarth.index = uarth.index + 1;
+	}
+	return GNSS_OK;
+}
+#endif /* TESEO_USE_UART */
+
+#if defined (TESEO_USE_I2C)
 static GNSS_StatusTypeDef platform_I2CRead(uint16_t RegisterAddr, uint8_t* pBuffer, uint16_t NumByteToRead)
 {
 	int status = 0;
+	HAL_StatusTypeDef HAL_Status;
 
-	HAL_I2C_Mem_Read(&hi2c1, DEFAULT_DEVICE_ADDRESS, RegisterAddr,
+	HAL_Status = HAL_I2C_Mem_Read(&hi2c1, DEFAULT_DEVICE_ADDRESS, RegisterAddr,
 			I2C_MEMADD_SIZE_8BIT, pBuffer, NumByteToRead, 1000);
 
-	status=1;
-	//	int status = 0;
-	//	//Loop until the port is transmitted correctly
-	//	do
-	//	{
-	//#ifdef DEBUG_MODE
-	//		Serial.print("Beginning transmission to ");
-	//		Serial.println(((DEFAULT_DEVICE_ADDRESS)) & 0x7F);
-	//#endif
-	//		dev_i2c->beginTransmission(DEFAULT_DEVICE_ADDRESS);
-	//#ifdef DEBUG_MODE
-	//		Serial.print("Writing port number ");
-	//		Serial.println(RegisterAddr);
-	//#endif
-	//		dev_i2c->write((uint8_t)RegisterAddr);
-	//		status = dev_i2c->endTransmission(false);
-	//		//Fix for some STM32 boards
-	//		//Reinitialize th i2c bus with the default parameters
-	//
-	//#ifdef ARDUINO_ARCH_STM32
-	//		if (status)
-	//		{
-	//			dev_i2c->end();
-	//			dev_i2c->begin();
-	//		}
-	//#endif
-	////End of fix
-	//	}
-	//	while(status != 0);
-	//
-	//	dev_i2c->requestFrom((uint8_t)DEFAULT_DEVICE_ADDRESS, (uint8_t) NumByteToRead);
-	//
-	//	int i=0;
-	//	while (dev_i2c->available())
-	//	{
-	//		pBuffer[i] = dev_i2c->read();
-	//		i++;
-	//	}
+	if (HAL_Status == HAL_OK) status=1;
+	else status=0;
 
 	return (GNSS_StatusTypeDef) status;
 }
@@ -742,36 +890,17 @@ static GNSS_StatusTypeDef platform_I2CRead(uint16_t RegisterAddr, uint8_t* pBuff
 static GNSS_StatusTypeDef platform_I2CWrite(uint16_t RegisterAddr, uint8_t* pBuffer, uint16_t NumByteToWrite)
 {
 	int status = 0;
+	HAL_StatusTypeDef HAL_Status;
 
-	HAL_I2C_Mem_Write(&hi2c1, DEFAULT_DEVICE_ADDRESS, RegisterAddr,
+	HAL_Status = HAL_I2C_Mem_Write(&hi2c1, DEFAULT_DEVICE_ADDRESS, RegisterAddr,
 			I2C_MEMADD_SIZE_8BIT, (uint8_t*) pBuffer, NumByteToWrite, 1000);
 
-	status=1;
-	//	int status = 0;
-	//	//Loop until the port is transmitted correctly
-	//	dev_i2c->beginTransmission(DEFAULT_DEVICE_ADDRESS);
-	//	status += dev_i2c->write((uint8_t)RegisterAddr);
-	//	int i=0;
-	//	while (i<NumByteToWrite)
-	//	{
-	//		status += dev_i2c->write(pBuffer[i]);
-	//		i++;
-	//	}
-	//#ifdef DEBUG_MODE
-	//	if (status != (NumByteToWrite + 1))
-	//		Serial.println("Not all bytes were transmitted");
-	//#endif
-	//
-	//	status = dev_i2c->endTransmission(true);
-	//
-	//#ifdef DEBUG_MODE
-	//	if (status != 0)
-	//		Serial.println("Something went terribly wrong");
-	//#endif
+	if (HAL_Status == HAL_OK) status=1;
+	else status=0;
 
 	return (GNSS_StatusTypeDef) status;
 }
-
+#endif /* TESEO_USE_I2C */
 
 static GNSSParser_Status_t GNSS_PARSER_Init(GNSSParser_Data_t *pGNSSParser_Data)
 {
@@ -830,7 +959,6 @@ static GNSSParser_Status_t GNSS_PARSER_CheckSanity(uint8_t *pSentence, uint64_t 
 
 	return (check == checksum) ? GNSS_PARSER_OK : GNSS_PARSER_ERROR;
 }
-
 
 static GNSSParser_Status_t GNSS_PARSER_ParseMsg(GNSSParser_Data_t *pGNSSParser_Data, uint8_t msg, uint8_t *pBuffer)
 {
@@ -986,7 +1114,6 @@ static ParseStatus_t NMEA_ParseGNS(GNS_Info_t *pGNSInfo, uint8_t NMEA[])
 
 	if(NMEA != NULL)
 	{
-
 		/* clear the app[][] buffer */
 		for (int8_t i = 0; i < MAX_MSG_LEN; i++)
 		{
@@ -1134,7 +1261,6 @@ static ParseStatus_t NMEA_ParseGPGST(GPGST_Info_t *pGPGSTInfo, uint8_t NMEA[])
 
 	return status;
 }
-
 
 static ParseStatus_t NMEA_ParseGPRMC(GPRMC_Info_t *pGPRMCInfo, uint8_t NMEA[])
 {
@@ -1296,7 +1422,6 @@ static int32_t NMEA_CheckGSAMsg(const char header[])
 
 	return is_gsamsg;
 }
-
 
 static ParseStatus_t NMEA_ParseGSV(GSV_Info_t *pGSVInfo, uint8_t NMEA[])
 {

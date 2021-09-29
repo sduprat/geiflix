@@ -39,7 +39,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  ********************************************************************************
+ * Converted to plain C by S.DI MERCURIO 2021
  */
+
+#ifndef TESEO_LIV3F_H_
+#define TESEO_LIV3F_H_
 
 #include "stm32l4xx_hal.h"
 
@@ -47,12 +51,16 @@
 #include "gnss_parser.h"
 #include "NMEA_parser.h"
 
-#define DEFAULT_BUS 0
-#define DEFAULT_I2C NULL
-#define DEFAULT_UART NULL
+//#define TESEO_USE_I2C
+#define TESEO_USE_UART
 
-#define DEFAULT_DEVICE_ADDRESS 0x3A
+#if defined (TESEO_USE_I2C)
+#define DEFAULT_I2C_HANDLER hi2c1
+#define DEFAULT_DEVICE_ADDRESS (0x3A<<1)
 #define DEFAULT_DEVICE_PORT 0xFF
+#else /* TESEO_USE_UART */
+#define DEFAULT_UART_HANDLER huart1
+#endif /* TESEO_USE_I2C */
 
 #define BUFFER_SIZE 32
 #define MAX_FIELD_LENGTH 30
@@ -90,15 +98,20 @@ typedef enum
 	THOUSANDS
 } Decimal_t;
 
-//extern int useI2C = DEFAULT_BUS;
-////extern TwoWire *dev_i2c = DEFAULT_I2C;
-////extern HardwareSerial *dev_uart = DEFAULT_UART;
-//extern int commandDone;
-//extern char compareMessage[MAX_RESPONSE_LENGTH];
-//extern I2CHandler i2ch;
-//extern UARTHandler uarth;
-//extern GNSSParser_Data_t data;
-//extern uint8_t app[MAX_MSG_LEN][MAX_FIELD_LENGTH];
+/**
+ * @brief       Reset chip and wait 3s
+ */
+void TESEO_ResetChip(void);
+
+/**
+ * @brief       Wakeup chip from hibernate mode
+ */
+void TESEO_WakeupChip(void);
+
+/**
+ * @brief       Switch chip into hibernate mode
+ */
+void TESEO_HibernateChip(void);
 
 /**
  * @brief       Initialize the sensor and the data structures
@@ -123,14 +136,14 @@ GNSS_StatusTypeDef TESEO_SendCommand(char *command);
 
 /**
  * @brief    	    Ask the device for a specific message
- * @param message	The message to recieve
+ * @param message	The message to receive
  * @return   	    GNSS_OK on Success
  */
 GNSS_StatusTypeDef TESEO_AskMessage(char* message);
 
 /**
- * @brief       Ask the device if the message requested by @a askMessage() was recieved
- * @return      1 if the message was recieved, 0 otherwise
+ * @brief       Ask the device if the message requested by @a askMessage() was received
+ * @return      1 if the message was received, 0 otherwise
  */
 int TESEO_GetMessageDone ();
 
@@ -147,10 +160,22 @@ GNSSParser_Data_t TESEO_GetData();
 int TESEO_GetWakeupStatus();
 
 /**
- * @brief       Get the GPGGA coordinates
+ * @brief       Get the GPGGA coordinates in DMM
  * @return      The coordinates structure
+ * @remark      Coordinates are given in Decimale Degree Minute (DMM): See google :https://support.google.com/maps/answer/18539?hl=fr&co=GENIE.Platform%3DAndroid)
+ * @remark      lon and lat read as this: DDD MM.MMMM, with 1,2 or 3 digits for degree, 2 digit only for minute and after the dot, fraction of minute
+ * @remark      the format can be used under google maps , with the space between degree and minute.
+ * @remark      Separate lat and lon with period like this: 1 27.96845, 43 34.25801
+ * @remark      See also http://tvaira.free.fr/bts-sn/activites/activite-peripherique-usb/conversions.html
  */
-Coords_t TESEO_GetCoords();
+Coords_t TESEO_GetCoords_DMM();
+
+/**
+ * @brief       Get the GPGGA coordinates in DD
+ * @return      The coordinates structure
+ * @remark      Convert coordinates in Decimale Degree Minute (DMM) to Decimal Degree (DD)
+ */
+Coords_t TESEO_GetCoords_DD();
 
 /**
  * @brief       Get the debug status of the device
@@ -241,3 +266,4 @@ OpResult_t TESEO_GetResult ();
  */
 Debug_State TESEO_ToggleDebug();
 
+#endif /*TESEO_LIV3F_H_*/
