@@ -11,7 +11,6 @@
 #include "iks01a2.h"
 #include "teseo_liv3f.h"
 
-extern CAN_HandleTypeDef hcan1;
 extern I2C_HandleTypeDef hi2c1;
 extern UART_HandleTypeDef huart2;
 
