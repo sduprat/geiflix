@@ -10,6 +10,7 @@
 
 #include "iks01a2.h"
 #include "teseo_liv3f.h"
+#include "ahrs.h"
 
 extern I2C_HandleTypeDef hi2c1;
 extern UART_HandleTypeDef huart2;
@@ -20,6 +21,8 @@ extern values3d_t current_magnetic_mG;
 extern float current_pressure_hPa;
 extern float current_temperature_degC;
 extern float current_humidity_perc;
+
+extern AHRS_3AxisValues current_compass;
 
 extern Coords_t current_coords;
 

@@ -20,6 +20,8 @@ float current_pressure_hPa;
 float current_temperature_degC;
 float current_humidity_perc;
 
+AHRS_3AxisValues current_compass;
+
 Coords_t current_coords;
 /*
  * @brief  Initialization of global variables

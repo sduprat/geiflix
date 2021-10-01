@@ -294,7 +294,7 @@ static int32_t NMEA_CheckAGPSMsg(const char header[]);
  * @param  GPGGAInfo Instance of a GPGGA_Info_t object pointer where the GPGGA_Info_t stored into pInfo have to be copied
  * @retval None
  */
-static void NMEA_Copy_Data(GPGGA_Info_t *pInfo, GPGGA_Info_t GPGGAInfo);
+//static void NMEA_Copy_Data(GPGGA_Info_t *pInfo, GPGGA_Info_t GPGGAInfo);
 
 /**
  * @brief  This function converts a character to unsigned integer
@@ -380,7 +380,7 @@ GNSS_StatusTypeDef TESEO_SendCommand(char *command)
 GNSS_StatusTypeDef TESEO_AskMessage(char* message)
 {
 	memset(compareMessage, 0, MAX_RESPONSE_LENGTH);
-	strncpy(compareMessage, message, strlen(message));
+	strncpy(compareMessage, message, strlen(message)+1);
 	commandDone=0;
 	return GNSS_OK;
 }
@@ -2510,26 +2510,26 @@ static int32_t NMEA_CheckAGPSMsg(const char header[])
 	return is_passmsg;
 }
 
-static void NMEA_Copy_Data(GPGGA_Info_t *pInfo, GPGGA_Info_t GPGGAInfo)
-{
-	pInfo->acc          = GPGGAInfo.acc;
-	pInfo->geoid.height = GPGGAInfo.geoid.height;
-	pInfo->geoid.mis    = GPGGAInfo.geoid.mis;
-	pInfo->sats         = GPGGAInfo.sats;
-	pInfo->update       = GPGGAInfo.update;
-	pInfo->utc.hh       = GPGGAInfo.utc.hh;
-	pInfo->utc.mm       = GPGGAInfo.utc.mm;
-	pInfo->utc.ss       = GPGGAInfo.utc.ss;
-	pInfo->utc.utc      = GPGGAInfo.utc.utc;
-	pInfo->valid        = GPGGAInfo.valid;
-	pInfo->xyz.alt      = GPGGAInfo.xyz.alt;
-	pInfo->xyz.lat      = GPGGAInfo.xyz.lat;
-	pInfo->xyz.lon      = GPGGAInfo.xyz.lon;
-	pInfo->xyz.ew       = GPGGAInfo.xyz.ew;
-	pInfo->xyz.ns       = GPGGAInfo.xyz.ns;
-	pInfo->xyz.mis      = GPGGAInfo.xyz.mis;
-	pInfo->checksum     = GPGGAInfo.checksum;
-}
+//static void NMEA_Copy_Data(GPGGA_Info_t *pInfo, GPGGA_Info_t GPGGAInfo)
+//{
+//	pInfo->acc          = GPGGAInfo.acc;
+//	pInfo->geoid.height = GPGGAInfo.geoid.height;
+//	pInfo->geoid.mis    = GPGGAInfo.geoid.mis;
+//	pInfo->sats         = GPGGAInfo.sats;
+//	pInfo->update       = GPGGAInfo.update;
+//	pInfo->utc.hh       = GPGGAInfo.utc.hh;
+//	pInfo->utc.mm       = GPGGAInfo.utc.mm;
+//	pInfo->utc.ss       = GPGGAInfo.utc.ss;
+//	pInfo->utc.utc      = GPGGAInfo.utc.utc;
+//	pInfo->valid        = GPGGAInfo.valid;
+//	pInfo->xyz.alt      = GPGGAInfo.xyz.alt;
+//	pInfo->xyz.lat      = GPGGAInfo.xyz.lat;
+//	pInfo->xyz.lon      = GPGGAInfo.xyz.lon;
+//	pInfo->xyz.ew       = GPGGAInfo.xyz.ew;
+//	pInfo->xyz.ns       = GPGGAInfo.xyz.ns;
+//	pInfo->xyz.mis      = GPGGAInfo.xyz.mis;
+//	pInfo->checksum     = GPGGAInfo.checksum;
+//}
 
 uint32_t NMEA_Char2int(uint8_t c)
 {

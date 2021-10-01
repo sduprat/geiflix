@@ -26,6 +26,7 @@
 
 #include "teseo_liv3f.h"
 #include "iks01a2.h"
+#include "ahrs.h"
 #include "can.h"
 #include "scheduler.h"
 #include "globalvar.h"
@@ -112,8 +113,14 @@ int main(void)
 	}
 
 	/* Initialization of CAN */
-	CAN_Init();
-	CAN_AddRXCallback(CAN_FIFO_0_Callback);
+	/* Todo: activate it when a driver is connected
+	 * otherwise, it is flooding system with interrupt
+	 */
+	//CAN_Init();
+	//CAN_AddRXCallback(CAN_FIFO_0_Callback);
+
+	/* Initialisation of AHRS */
+	AHRS_Init();
 
 	/* Various initializations */
 	GLOBVAR_Init();

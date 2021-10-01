@@ -10,6 +10,7 @@
 #include "globalvar.h"
 #include "teseo_liv3f.h"
 #include "iks01a2.h"
+#include "ahrs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -88,6 +89,14 @@ void task_get_gps_coord(void);
 uint32_t counter_task_get_gps_coord;
 #define PERIOD_TASK_GET_GPS_COORD 50
 
+/*********************************
+ * Task task_compute_ahrs
+ * Periodic: 12.5hz (80 ms)
+ */
+void task_compute_ahrs(void);
+uint32_t counter_task_compute_ahrs;
+#define PERIOD_TASK_COMPUTE_AHRS 80
+
 void task_background(void);
 
 /*
@@ -107,9 +116,13 @@ uint32_t SCHEDULER_Init(void) {
 	counter_task_get_humidity=0;
 	counter_task_get_temperature=0;
 
+	/* Counter for ahrs tasks */
+	counter_task_compute_ahrs=0;
+
 	/* Counters for GPS tasks */
 	counter_task_update_gps=0;
 	counter_task_get_gps_coord=0;
+
 	return 1;
 }
 
@@ -133,6 +146,7 @@ void SCHEDULER_Run(void) {
 			counter_task_get_temperature++;
 			counter_task_get_humidity++;
 			counter_task_get_pressure++;
+			counter_task_compute_ahrs++;
 			counter_task_update_gps++;
 			counter_task_get_gps_coord++;
 		}
@@ -167,6 +181,11 @@ void SCHEDULER_Run(void) {
 			task_get_pressure();
 		}
 
+		if (counter_task_compute_ahrs>= PERIOD_TASK_COMPUTE_AHRS) {
+			counter_task_compute_ahrs=0;
+			task_compute_ahrs();
+		}
+
 		if (counter_task_update_gps>= PERIOD_TASK_UPDATE_GPS) {
 			counter_task_update_gps=0;
 			task_update_gps();
@@ -191,6 +210,8 @@ void task_background(void) {
 }
 
 void task_send_values (void) {
+	memcpy((void*)&current_compass, (void*)AHRS_GetEulerAngles(),sizeof(AHRS_3AxisValues));
+
 	printf("Acc: x=%4.2f\ty=%4.2f\tz=%4.2f\r\n",
 			current_acceleration_mg.x, current_acceleration_mg.y, current_acceleration_mg.z);
 	printf("Gyr: x=%4.2f\ty=%4.2f\tz=%4.2f\r\n",
@@ -199,7 +220,10 @@ void task_send_values (void) {
 			current_magnetic_mG.x, current_magnetic_mG.y, current_magnetic_mG.z);
 	printf("T°:%3.2f\r\nPres=%6.2f\r\nHum=%3.2f%%\r\n",
 			current_temperature_degC, current_pressure_hPa, current_humidity_perc);
-	printf("lon=%2.5f\tlat=%2.5f\talt=%2.2f\r\n\r\n", current_coords.lon, current_coords.lat, current_coords.alt);
+	printf("Lon=%2.5f\tLat=%2.5f\tAlt=%2.2f\r\n", current_coords.lon, current_coords.lat, current_coords.alt);
+	printf("Compass: X=%3.2f\r\n         Y=%3.2f\r\n         Z=%3.2f\r\n",
+					current_compass.x, current_compass.y, current_compass.z);
+	printf("\r\n");
 }
 
 void task_get_acceleration (void) {
@@ -224,6 +248,14 @@ void task_get_humidity (void) {
 
 void task_get_pressure (void) {
 	IKS01A2_GetPressure(&current_pressure_hPa);
+}
+
+void task_compute_ahrs(void) {
+	// TODO: AHRS is not working: maybe a problem with values scaling
+	AHRS_Update(
+			(AHRS_3AxisValues*)&current_acceleration_mg,
+			(AHRS_3AxisValues*)&current_angular_rate_mdps,
+			(AHRS_3AxisValues*)&current_magnetic_mG);
 }
 
 void task_update_gps(void) {
