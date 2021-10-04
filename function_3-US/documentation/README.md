@@ -2,9 +2,11 @@
 
 ## How to compile with TrueSTUDIO
 
-The code on the Discovery exceeding 32KB, the TrueSTUDIO IDE for STM32 was used. This IDE can be downloaded from the [Attolic official website] (https://atollic.com/resources/download/).
+Because code on the Discovery is exceeding 32KB, TrueSTUDIO IDE for STM32 was used. This IDE can be downloaded from the [Attolic official website] (https://atollic.com/resources/download/).
 
 The following describes how to configure a project on TrueSTUDIO to compile the project code.
+
+NB: Firmware has been converted to STMCubeIDE v7 since 09/2021. No test has been carried and software is given "as-is"
 
 ### Creating a project
 
