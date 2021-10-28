@@ -1,4 +1,4 @@
-# Function 2 - Jetson
+# Function 0 - Raspberry
 
 Le systeme central est basé sur une raspberry pi 3B, sur laquelle est fixée un "HAT" pican2 de chez [skpang](https://www.skpang.co.uk/collections/hats/products/pican2-can-bus-board-for-raspberry-pi-2-3)
 
