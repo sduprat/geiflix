@@ -2,6 +2,7 @@
 
 ## Config
 La caméra est connectée à la Jetson en USB, la Jetson en Ethernet à la Raspi.
+![](./figures/topo.png)
 
 ## Test de la caméra
 La caméra est branchée en USB et est censée être opérationnelle (si c’est pas le cas bonne merde). Pour la tester, on peut utiliser l’application `nvgstcapture`.
