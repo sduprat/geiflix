@@ -10,7 +10,8 @@ This repository is intended to provide a basis for students starting a new proje
 * SELLAM Nabil, ZHANG Guang Xue, BONIN Antoine, CHADUC Clement, DUCONGE Kevin, REBOUCAS MAIA  Lucas.
 * BENAZECH Alexandre, BRIARD Sébastien, CASSAGNE Ludovic, DOTHEE Solène, SARTHOU Guillaume.
 * COMBATTELLI Julien, EGRETEAU Corentin, DE BRITO Guillaume, DUPERON Liliane, CHATAIGNON Mickael.
-* DEBAILLEUX Margaux, COMBES Jean, FARO Mathias, FAYARD Baptiste, GANDOU Thomas.
+* DEBAILLEUX Margaux, COMBES Jean, FARO Mathias, FAYARD Baptiste, 
+GANDOU Thomas.
 * GISSOT Lucas, LUBAT Eric, LARSSON Léo, LOUPIAS Delia, TAMIMO Volamiary.
 * MEDRANO Johan, MIRAULT Clara, MONNERET Vivien, PORTES Quentin, SHIN Sohun, IGLESIS Enzo.
 * ANTUNES COELHO Carolina, CHATELAIN Vincent, JOURDE Tanguy, PUECHMAILLE David, SIRGABSOU Yandika
@@ -39,7 +40,7 @@ The projects are (or were) surpervised by:
 * SUBIAS Audine
 
 ## Quick User Guide
-###Turn the car on and off
+### Turn the car on and off
 * To turn on the car:
   * Toggle the red button to bring the power.
   * Press the START push button (hold it down for a short while).
@@ -49,7 +50,7 @@ The projects are (or were) surpervised by:
 	* Use the red button as a switch to turn off the power.
 
 
-###Compile and load
+### Compile and load
 * `git clone https://github.com/pehladik/geicar.git`
 * For the embedded software on the Nucleo, use Keil to compile the project and load the code on the card. __Warning__, to load the code on the card, you must hold down the START button during the operation (see details in the documentation).
 * For the embedded software on the discovery, use Attolic to compile and load the code (see more details in the documentation).
