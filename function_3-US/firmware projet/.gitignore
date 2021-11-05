@@ -1,0 +1,4 @@
+#Directory to exclude 
+Debug/
+Release/
+
