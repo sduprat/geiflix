@@ -213,7 +213,7 @@ int main(void)
     BSP_LED_Init(LED10);
     BSP_PB_Init(BUTTON_USER, BUTTON_MODE_EXTI);
 
-    //HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/100000); // Systick a  10 µs
+    //HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/100000); // Systick aï¿½ 10 ï¿½s
 
     Demo_GyroConfig();
     UpdateGyroBias();
@@ -290,6 +290,12 @@ int main(void)
 			CAN_US_mes[4] = (US_AV_C_mes >> 8) & 0xFF;
 			CAN_US_mes[5] = US_AV_C_mes & 0xFF;
 			CAN_Send(CAN_US_mes, CAN_US2_id);
+
+			if(US_AV_C_mes<50){				//test ultrasons avant centre
+				BSP_LED_On(LED_ORANGE);		//s'allume si objet en dessous de 50cm
+			}else{
+				BSP_LED_Off(LED_ORANGE);
+			}
 
             // TODO: Revoir le delai de 1 seconde
             // HAL_Delay(100000);
