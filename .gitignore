@@ -67,8 +67,8 @@ Project Logs for*/
 *.7z
 
 # documentations
-*.pdf
-*.chm
+# *.pdf
+# *.chm
 
 # kicad
 *.bak
@@ -86,11 +86,11 @@ Project Logs for*/
 __pycache__/
 *.pdf
 *.*~
-*.bmp
-*.jpeg
-*.jpg
-*.png
-*.tiff
-*.gif
-*.ico
+# *.bmp
+# *.jpeg
+# *.jpg
+# *.png
+# *.tiff
+# *.gif
+# *.ico
 
