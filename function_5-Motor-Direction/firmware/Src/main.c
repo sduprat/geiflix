@@ -240,7 +240,7 @@ int main(void)
         
         /* CAN */
         // Envoi des mesures
-        if (SEND_CAN){
+        /*if (SEND_CAN){
             SEND_CAN = 0;
             data[0] = (ADCBUF[1] >> 8) & 0xFF; // Vol_mes
             data[1] = ADCBUF[1] & 0xFF;
@@ -255,7 +255,7 @@ int main(void)
             data[7] = VMD_mes & 0xFF;
             
             CAN_Send(data, CAN_ID_MS);
-        }
+        }*/
         
     }
     /* USER CODE END 3 */

@@ -1,0 +1,21 @@
+!SESSION 2021-11-09 13:35:18.921 -----------------------------------------------
+eclipse.buildId=Version 1.7.0
+java.version=11.0.10
+java.vendor=AdoptOpenJDK
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=fr_FR
+Command-line arguments:  -os win32 -ws win32 -arch x86_64
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 4 4 2021-11-09 13:35:43.728
+!MESSAGE CubeMX plugin appears to be active, Log4j initialization might be too late.
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 1 1 2021-11-09 13:35:43.766
+!MESSAGE Log4j initialized with config file C:\Users\LeaP\Documents\SCOLARITE\INSA\5A\PROJET\projet\geiflix\.metadata\.log4j.xml
+
+!ENTRY com.st.stm32cube.ide.mcu.ide 1 1 2021-11-09 13:35:45.791
+!MESSAGE Started RMI Server, listening on port 41337
+
+!ENTRY org.eclipse.cdt.core 1 0 2021-11-09 13:36:30.752
+!MESSAGE Indexed 'voiture-elec' (29 sources, 90 headers) in 2.67 sec: 5,875 declarations; 40,541 references; 0 unresolved inclusions; 1 syntax errors; 2 unresolved names (0.0043%)
+
+!ENTRY org.eclipse.cdt.core 1 0 2021-11-09 13:39:09.353
+!MESSAGE Indexed 'FW-Motor-Dir' (30 sources, 106 headers) in 5.16 sec: 13,397 declarations; 42,651 references; 23 unresolved inclusions; 167 syntax errors; 2,808 unresolved names (4.8%)
