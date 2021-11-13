@@ -47,8 +47,6 @@
 #include "gpio.h"
 #include "power.h"
 
-
-
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
@@ -57,8 +55,8 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-int UPDATE_CMD_FLAG = 0;
-int SEND_CAN = 0;
+int UPDATE_CMD_FLAG = 1;
+int SEND_CAN = 1;
 
 /* Tous ADC sur 12 bits pleine echelle 3.3V
  ADCBUF[0] mesure batterie
@@ -69,7 +67,7 @@ int SEND_CAN = 0;
  */
 uint32_t ADCBUF[5];
 
-int cmdLRM = 50, cmdRRM = 50, cmdSFM = 50, cmdPOS = 50; // 0 à 100 Moteur gauche, droit, avant, angle avant
+int cmdLRM = 50, cmdRRM = 50, cmdSFM = 50, cmdPOS = 50; // 0 ï¿½ 100 Moteur gauche, droit, avant, angle avant
 
 uint32_t VMG_mes = 0, VMD_mes = 0, per_vitesseG = 0, per_vitesseD = 0;
 
@@ -116,10 +114,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
     /***               Mesures des vitesses moteurs                      ***
-     * Féquences entrées micro, sorties capteurs, entre environ 2hz à 80 hz *
-     * Timer 2,4 sur 16 bits (65535)cp ->compte période 9999 pour 1s (1Hz)  *
-     *                               ->compte période 1000 pour 0.1s (10Hz) *
-     * Rapport réduction 2279/64 ~ 36 impulsions/tour de roue               *
+     * Fï¿½quences entrï¿½es micro, sorties capteurs, entre environ 2hz ï¿½ 80 hz *
+     * Timer 2,4 sur 16 bits (65535)cp ->compte pï¿½riode 9999 pour 1s (1Hz)  *
+     *                               ->compte pï¿½riode 1000 pour 0.1s (10Hz) *
+     * Rapport rï¿½duction 2279/64 ~ 36 impulsions/tour de roue               *
      * unite de 0.01*tr/mn = 168495/ cp                                     *
      */
     if (htim->Instance==TIM2)
@@ -208,9 +206,6 @@ int main(void)
     /* ADC1 */
     HAL_ADC_Start_DMA (&hadc1,ADCBUF,5);
     
-    /* CAN */
-    CAN_FilterConfig();
-    __HAL_CAN_ENABLE_IT(&hcan, CAN_IT_FMP0);
     /* USER CODE END 2 */
     
     /* Infinite loop */
@@ -321,7 +316,7 @@ void SystemClock_Config(void)
     HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
     
     /* SysTick_IRQn interrupt configuration */
-    HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(SysTick_IRQn, 0, 15U);
 }
 
 /* USER CODE BEGIN 4 */
