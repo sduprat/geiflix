@@ -7,17 +7,21 @@ import os
 
 
 
-beep_on = False 
+beep_on = False
 
 
 
 #Send PWM to the buzzer
 def beep(pwm):
     global beep_on
-    beep_on = True
-    pwm.start(50)
-    time.sleep(0.5)
-    pwm.stop()
+    etat_beep = False
+    while (True):
+        if ((beep_on != etat_beep) and beep_on):
+            pwm.start(50)
+            etat_beep = True
+        elif (beep_on != etat_beep and (not beep_on)):
+            pwm.stop()
+            etat_beep = False
     beep_on = False
 
 
@@ -38,16 +42,28 @@ def main():
     GPIO.setup(33, GPIO.OUT)
     pwm = GPIO.PWM(33, 2300)
 
+    x = threading.Thread(target=beep, args=(pwm,), daemon=True)
+    x.start()
 
+    counter_person = 0
 
     while display.IsStreaming():
+        person_detected = False
         img = camera.Capture()
         detections = net.Detect(img)
         for detection in detections:
             if (detection.ClassID == 1):
-                if (beep_on == False) :
-                    x = threading.Thread(target=beep, args=(pwm,), daemon=True)
-                    x.start()
+                counter_person += 1
+                person_detected = True
+        print(counter_person)        
+        if (not person_detected):
+            counter_person = 0
+        if (counter_person > 2):
+            beep_on = True
+            counter_person = 3
+        else:
+            beep_on = False
+
         display.Render(img)
         display.SetStatus("Object Detection | Network {:.0f} FPS".format(net.GetNetworkFPS()))
 
