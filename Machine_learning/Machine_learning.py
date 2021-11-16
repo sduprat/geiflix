@@ -87,11 +87,22 @@ _, predicted = torch.max(outputs, 1)
                               for j in range(batch_size))) """
 
 Correct_answer= 0
+False_positive=0
+False_negative=0
+
 for k in range (batch_size):
-  if classes[labels[k]] == classes[predicted[k]]:
-    Correct_answer += 1
+
+  if (classes[labels[k]] == "Fire" and classes[predicted[k]] == "No_Fire"):
+    False_negative += 1
+  elif (classes[labels[k]] == 'No_Fire' and classes[predicted[k]] == 'Fire'):
+    False_positive+=1
+  else:
+    Correct_answer+=1
 
 print('Accuracy = ',(Correct_answer/batch_size)*100,'%')
+print('False positives = ',(False_positive/batch_size)*100,'%')
+print('False negatives = ',(False_negative/batch_size)*100,'%')
+
 
 # print images
 #imshow(torchvision.utils.make_grid(images))
