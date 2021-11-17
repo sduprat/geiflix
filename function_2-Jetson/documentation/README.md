@@ -1,6 +1,11 @@
 # Function 2 - Jetson
 
-La carte utilisée dans ce projet est une Jetson Nano de Nvidia que l'on nommera par la suite simplement jetson. [URL du site web de nividia](https://developer.nvidia.com/embedded/learn/get-started-jetson-nano-devkit)
+La carte utilisée dans ce projet est une Jetson Nano de Nvidia que l'on nommera par la suite simplement jetson.
+
+## Lien utiles
+
+- [URL du site web de nividia](https://developer.nvidia.com/embedded/learn/get-started-jetson-nano-devkit)
+- [Guide Developer Kit](https://developer.nvidia.com/embedded/downloads#?search=Jetson%20Nano%20Developer%20Kit%20User%20Guide)
 
 ## Creation de la carte SD
 

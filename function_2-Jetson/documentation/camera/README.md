@@ -22,3 +22,5 @@ où N est le numéro relevé plus haut, càd normalement 0. Une fenêtre devrait
 ## Traitement de l’image
 Le traitement de l’image est effectué sur la Jetson, les données qui en sont issues sont ensuite rapatriées vers la Raspi.
 
+### Fonctionnement
+Voir [comment compiler et lancer le programme](../../camera/analyseIMG/README.md).

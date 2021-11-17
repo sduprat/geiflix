@@ -67,8 +67,8 @@ Project Logs for*/
 *.7z
 
 # documentations
-*.pdf
-*.chm
+# *.pdf
+# *.chm
 
 # kicad
 *.bak
@@ -86,11 +86,29 @@ Project Logs for*/
 __pycache__/
 *.pdf
 *.*~
-*.bmp
-*.jpeg
-*.jpg
-*.png
-*.tiff
-*.gif
-*.ico
+# *.bmp
+# *.jpeg
+# *.jpg
+# *.png
+# *.tiff
+# *.gif
+# *.ico
 
+# IDE-related folders
+.vscode
+
+# CMake files & folders
+CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps
+
+# Build folders
+build

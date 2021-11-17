@@ -45,7 +45,7 @@
 /* USER CODE BEGIN 0 */
 
 extern int cmdLRM, cmdRRM, cmdSFM, cmdPOS;
-extern int en_MARG, en_MARD, en_MAV, en_POS;
+extern GPIO_PinState en_MARG, en_MARD, en_MAV, en_POS;
 /* USER CODE END 0 */
 
 CAN_HandleTypeDef hcan;
@@ -53,7 +53,6 @@ CAN_HandleTypeDef hcan;
 /* CAN init function */
 void MX_CAN_Init(void)
 {
-
   hcan.Instance = CAN1;
   hcan.Init.Prescaler = 8;
   hcan.Init.Mode = CAN_MODE_NORMAL;
@@ -71,6 +70,9 @@ void MX_CAN_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
+  CAN_FilterConfig();
+
+  __HAL_CAN_ENABLE_IT(&hcan, CAN_IT_FMP0);
 }
 
 void HAL_CAN_MspInit(CAN_HandleTypeDef* canHandle)
@@ -84,7 +86,8 @@ void HAL_CAN_MspInit(CAN_HandleTypeDef* canHandle)
   /* USER CODE END CAN1_MspInit 0 */
     /* CAN1 clock enable */
     __HAL_RCC_CAN1_CLK_ENABLE();
-  
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+
     /**CAN GPIO Configuration    
     PA11     ------> CAN_RX
     PA12     ------> CAN_TX 
@@ -100,7 +103,7 @@ void HAL_CAN_MspInit(CAN_HandleTypeDef* canHandle)
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     /* CAN1 interrupt Init */
-    HAL_NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 0, 1U);
     HAL_NVIC_EnableIRQ(USB_LP_CAN1_RX0_IRQn);
   /* USER CODE BEGIN CAN1_MspInit 1 */
 
@@ -118,7 +121,8 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* canHandle)
   /* USER CODE END CAN1_MspDeInit 0 */
     /* Peripheral clock disable */
     __HAL_RCC_CAN1_CLK_DISABLE();
-  
+
+
     /**CAN GPIO Configuration    
     PA11     ------> CAN_RX
     PA12     ------> CAN_TX 
@@ -144,6 +148,8 @@ void CAN_FilterConfig(void)
 	sFilterConfig.FilterScale = CAN_FILTERSCALE_32BIT;
 	sFilterConfig.FilterIdHigh = 0x0000;
 	sFilterConfig.FilterIdLow = 0x0000;
+	sFilterConfig.FilterMaskIdHigh=0x0000;
+	sFilterConfig.FilterMaskIdLow=0x0000;
 	sFilterConfig.FilterFIFOAssignment = 0;
 	sFilterConfig.FilterActivation = ENABLE;
 	sFilterConfig.BankNumber = 14;
@@ -174,11 +180,17 @@ void CAN_Send(uint8_t* data, uint32_t id)
 
 
 
-int read_cmd(uint8_t data, int *en_M)
+int read_cmd(uint8_t data, GPIO_PinState *en_M)
 {
-	*en_M = data >> 7;
-	uint8_t VMdata = data & 0x7F;
-	return VMdata;
+	uint8_t tmp;
+	uint8_t VMdata;
+
+	tmp= data>>7;
+	if (tmp!=0) *en_M=GPIO_PIN_SET;
+	else *en_M=GPIO_PIN_RESET;
+
+	VMdata = data & 0x7F;
+	return (int)VMdata;
 }
 
 /*int MoteurAR_PWM(uint8_t data, int *en_M)
