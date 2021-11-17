@@ -17,16 +17,21 @@ transform = transforms.Compose( # composing several transforms together
     [transforms.ToTensor(), # to tensor object
      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]) # mean = 0.5, std = 0.5
 
+# create figure
+fig = plt.figure(figsize=(10, 7))
 
 PATH = './cifar_net_V3.pth'
 # set batch_size
-batch_size = 62
+batch_size = 10
+
+rows = batch_size/2
+columns = batch_size/2
 
 AVG_accuracy = 0
 AVG_FPositive = 0
 AVG_FNegative = 0
 
-Loops=10
+Loops=20
 
 # set number of workers
 num_workers = 2
@@ -52,10 +57,19 @@ def imshow(img):
   plt.imshow(np.transpose(gbr/255, (1, 2, 0)))
   plt.show()
 
+def imshow_multi(img,index,display=False):
+  '''Function to show multiple images at once'''
+  fig.add_subplot(rows, columns, index)
+  img = img / 2 + 0.5 # unnormalize
+  gbr = img.numpy() # convert to numpy objects
+  plt.imshow(np.transpose(gbr/255, (1, 2, 0)))
+  plt.axis('off')
+  
+
 for Curr_loop in range(Loops):
 
 
-  for epoch in range(20):  # loop over the dataset multiple times
+  for epoch in range(0):  # loop over the dataset multiple times
 
       running_loss = 0.0
       for i, data in enumerate(trainloader, 0):
@@ -74,7 +88,7 @@ for Curr_loop in range(Loops):
           # print statistics
           running_loss += loss.item()
 
-  torch.save(net.state_dict(), PATH)
+  #torch.save(net.state_dict(), PATH)
 
   # get random training images with iter function
   dataiter = iter(testloader)
@@ -97,8 +111,6 @@ for Curr_loop in range(Loops):
     else:
       Correct_answer+=1
 
-    if classes[predicted[k]] == "Fire" :
-      pass
 
   # print images
   #imshow(torchvision.utils.make_grid(images))
@@ -106,6 +118,18 @@ for Curr_loop in range(Loops):
   AVG_FPositive = AVG_FPositive+((False_positive/batch_size)*100)
   AVG_FNegative = AVG_FNegative+((False_negative/batch_size)*100)
   print('Loop ',Curr_loop+1,' is done !')
+
+Data_img = torch.clone(images)
+Data_img_list = list(Data_img.chunk(batch_size))
+
+Curr_img=0
+
+for k in range(batch_size):
+  if classes[predicted[k]] == "Fire" :
+    Curr_img+=1
+    imshow_multi(torchvision.utils.make_grid(Data_img_list[k][:][:][:]),Curr_img)
+#Fire_img = torch.as_tensor(Data_img_list)
+plt.show()
 
 AVG_accuracy=AVG_accuracy/Loops
 AVG_FPositive=AVG_FPositive/Loops
