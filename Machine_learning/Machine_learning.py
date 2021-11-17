@@ -18,9 +18,15 @@ transform = transforms.Compose( # composing several transforms together
      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]) # mean = 0.5, std = 0.5
 
 
-PATH = './cifar_net_V2.pth'
+PATH = './cifar_net_V3.pth'
 # set batch_size
-batch_size = 256
+batch_size = 62
+
+AVG_accuracy = 0
+AVG_FPositive = 0
+AVG_FNegative = 0
+
+Loops=10
 
 # set number of workers
 num_workers = 2
@@ -46,63 +52,65 @@ def imshow(img):
   plt.imshow(np.transpose(gbr/255, (1, 2, 0)))
   plt.show()
 
-
-for epoch in range(2):  # loop over the dataset multiple times
-
-    running_loss = 0.0
-    for i, data in enumerate(trainloader, 0):
-        # get the inputs; data is a list of [inputs, labels]
-        inputs, labels = data
-        labels=labels.flatten()
-        # zero the parameter gradients
-        optimizer.zero_grad()
-
-        # forward + backward + optimize
-        outputs = net(inputs)
-        loss = criterion(outputs, labels)
-        loss.backward()
-        optimizer.step()
-
-        # print statistics
-        running_loss += loss.item()
-        if i % 20 == 19:    # print every 2000 mini-batches
-            print('[%d, %5d] loss: %.3f' %
-                  (epoch + 1, i + 1,running_loss / 2000))
-            running_loss = 0.0
-
-torch.save(net.state_dict(), PATH)
-
-# get random training images with iter function
-dataiter = iter(testloader)
-images, labels = dataiter.next()
+for Curr_loop in range(Loops):
 
 
-""" print('GroundTruth: ', ' '.join('%s' % classes[labels[j]] for j in range(batch_size))) """
+  for epoch in range(20):  # loop over the dataset multiple times
 
-outputs = net(images)
+      running_loss = 0.0
+      for i, data in enumerate(trainloader, 0):
+          # get the inputs; data is a list of [inputs, labels]
+          inputs, labels = data
+          labels=labels.flatten()
+          # zero the parameter gradients
+          optimizer.zero_grad()
 
-_, predicted = torch.max(outputs, 1)
+          # forward + backward + optimize
+          outputs = net(inputs)
+          loss = criterion(outputs, labels)
+          loss.backward()
+          optimizer.step()
+          #print (i)
+          # print statistics
+          running_loss += loss.item()
 
-""" print('Predicted: ', ' '.join('%s' % classes[predicted[j]]
-                              for j in range(batch_size))) """
+  torch.save(net.state_dict(), PATH)
 
-Correct_answer= 0
-False_positive=0
-False_negative=0
+  # get random training images with iter function
+  dataiter = iter(testloader)
+  images, labels = dataiter.next()
 
-for k in range (batch_size):
+  outputs = net(images)
 
-  if (classes[labels[k]] == "Fire" and classes[predicted[k]] == "No_Fire"):
-    False_negative += 1
-  elif (classes[labels[k]] == 'No_Fire' and classes[predicted[k]] == 'Fire'):
-    False_positive+=1
-  else:
-    Correct_answer+=1
+  _, predicted = torch.max(outputs, 1)
 
-print('Accuracy = ',(Correct_answer/batch_size)*100,'%')
-print('False positives = ',(False_positive/batch_size)*100,'%')
-print('False negatives = ',(False_negative/batch_size)*100,'%')
+  Correct_answer= 0
+  False_positive=0
+  False_negative=0
 
+  for k in range (batch_size):
 
-# print images
-#imshow(torchvision.utils.make_grid(images))
+    if (classes[labels[k]] == "Fire" and classes[predicted[k]] == "No_Fire"):
+      False_negative += 1
+    elif (classes[labels[k]] == 'No_Fire' and classes[predicted[k]] == 'Fire'):
+      False_positive+=1
+    else:
+      Correct_answer+=1
+
+    if classes[predicted[k]] == "Fire" :
+      pass
+
+  # print images
+  #imshow(torchvision.utils.make_grid(images))
+  AVG_accuracy = AVG_accuracy+((Correct_answer/batch_size)*100)
+  AVG_FPositive = AVG_FPositive+((False_positive/batch_size)*100)
+  AVG_FNegative = AVG_FNegative+((False_negative/batch_size)*100)
+  print('Loop ',Curr_loop+1,' is done !')
+
+AVG_accuracy=AVG_accuracy/Loops
+AVG_FPositive=AVG_FPositive/Loops
+AVG_FNegative=AVG_FNegative/Loops
+
+print('Mean accuracy out of ',Loops,'tests is ',AVG_accuracy,'%')
+print('Mean False Positive risk out of ',Loops,'tests is ',AVG_FPositive,'%')
+print('Mean False Negative risk out of ',Loops,'tests is ',AVG_FNegative,'%')
