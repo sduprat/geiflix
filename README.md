@@ -21,4 +21,18 @@ The projects are (or were) surpervised by:
 
 ## Quick User Guide
 
-TBD
+
+### Installation
+Clone the repo
+Go to catkin_ws folder 
+Git clone https://github.com/dusty-nv/ros_deep_learning.git
+Go back to /catkin_ws
+catkin_make
+source devel/setup.bash
+3 prompts : 
+roscore     
+roslaunch ros_deep_learning detectnet.ros1.launch input:=/dev/video0 output:=display://0
+rosrun ros_recognition reco_ros.py 
+
+
+
