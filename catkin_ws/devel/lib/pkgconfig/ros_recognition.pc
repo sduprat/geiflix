@@ -1,0 +1,8 @@
+prefix=/home/admin-jetson/catkin_ws/devel
+
+Name: ros_recognition
+Description: Description of ros_recognition
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

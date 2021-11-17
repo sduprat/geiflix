@@ -1,0 +1,8 @@
+prefix=/home/admin-jetson/catkin_ws/devel
+
+Name: detect_things
+Description: Description of detect_things
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
