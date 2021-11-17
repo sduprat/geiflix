@@ -11,10 +11,13 @@ import socket
 # UDP
 UDP_IP = "192.168.1.102"
 UDP_PORT = 6699
+# LIDAR
 bufferSize = 1248
-tab_distance = [[250 for azimuth in range(361)] * channel for channel in range(17)]
-object_tall_already_detected = 0
-object_short_already_detected = 0
+    # We are at 600rpm, so 0.2° of precision -> 1801 points for each channel
+tab_distance = [[255 for azimuth in range(3601)] * channel for channel in range(17)]
+new_azimuth = 0; old_azimuth = 0; missing_azimuth = 0
+nb_nearby_objects = 0
+object_detected = 0
 
 #####################
 #                   #
@@ -39,32 +42,51 @@ while True:
         # Azimuth
         offset_azimuth = (44+100*(data_block-1))*2 # Start at 44, then 144, 244, 344...
         azimuth = data_hex[offset_azimuth]+data_hex[offset_azimuth+1]+data_hex[offset_azimuth+2]+data_hex[offset_azimuth+3]
-        azimuth = int(azimuth, 16)//100
+        azimuth = int(azimuth, 16)//10
 
         for channel in range(1, 17): # We can go to 33 but not yet  
-            # Distance
+            # Distance (/100 for meters, /2 for one-way distance)
             offset_distance = offset_azimuth + 4 + 6*channel
             distance_hex = data_hex[offset_distance]+data_hex[offset_distance+1]+data_hex[offset_distance+2]+data_hex[offset_distance+3]
-            distance = float(int(distance_hex, 16)/100)
+            distance = float(int(distance_hex, 16)/100)/2
             # Reflectivity
             offset_reflectivity = offset_distance + 4
             reflectivity_hex = data_hex[offset_reflectivity]+data_hex[offset_reflectivity+1]
             reflectivity = int(reflectivity_hex, 16)
-            # Check if distance is OK
-            if distance < 250.0:
+
+            # Check if distance is OK, 0.2m min and 150m max
+            if distance > 0.2 and distance < 150.0 :
                 tab_distance[channel][azimuth] = distance
-            
-    # If an object has been detected at channel 10 (13° up)
-    if tab_distance[10][0] < 2.0 and object_tall_already_detected == 0:
-        object_tall_already_detected = 1
-        print("'Tall' object detected !")
-    elif tab_distance[10][0] > 2.0 and object_tall_already_detected == 1:
-        object_tall_already_detected = 0
-        print("'Tall' object gone !")
-    # If an object has been detected at channel 2 (13° down) and no tall object detected
-    if tab_distance[2][0] < 2.0 and object_short_already_detected == 0 and object_tall_already_detected == 0:
-        object_short_already_detected = 1
-        print("'Short' object detected !")
-    elif tab_distance[2][0] > 2.0 and object_short_already_detected == 1:
-        object_short_already_detected = 0
-        print("'Short' object gone !")
+
+                # Perform interpolation
+                new_azimuth = azimuth
+                    # Adjust for rollover from 359.9° to 0°
+                if new_azimuth < old_azimuth:
+                    new_azimuth += 3600
+                    # Calculate missing azimuth
+                missing_azimuth = old_azimuth + (new_azimuth-old_azimuth)//2
+                    #Adjust for rollover from 359.9° to 0°
+                if missing_azimuth > 3600:
+                    missing_azimuth -= 3600
+                    # Calculate mean distance between old azimuth and new azimuth
+                tab_distance[channel][missing_azimuth] = (tab_distance[channel][old_azimuth]+tab_distance[channel][azimuth])/2
+                    
+        old_azimuth = azimuth
+
+        print(f"MODIF chan. {16}, azimuth {missing_azimuth}, distance = {tab_distance[16][missing_azimuth]}")
+        print(f"For channel {16}, azimuth {azimuth}, distance = {tab_distance[16][azimuth]}")
+        
+    # Detection of nearby objects
+    for azimuth in range(3601):
+        if tab_distance[16][azimuth] < 0.5 :
+            nb_nearby_objects += 1
+
+    if nb_nearby_objects == 0 and object_detected == 1:
+        print("Nearby Object Gone !")
+        object_detected = 0
+
+    if nb_nearby_objects > 0 and object_detected == 0:
+        print("Nearby Object Detected !")
+        object_detected = 1
+
+    nb_nearby_objects = 0

@@ -11,7 +11,7 @@ import re
 
 # UDP
 UDP_IP = "192.168.1.102"
-UDP_PORT = 6699
+UDP_MSOP_PORT = 6699
 bufferSize = 1248
 
 # MSOP Packet
@@ -27,6 +27,9 @@ lenght_LIDAR_Type = 2
 Start_Identifier = 'ffee'
 End_Identifier = '00ff'
 
+distance = [250 for i in range(33)]
+reflectivity = [255 for i in range(33)]
+
 #####################
 #                   #
 #   MAIN PROGRAM    #
@@ -34,16 +37,16 @@ End_Identifier = '00ff'
 #####################
 
 # UDP socket bind
-sock = socket.socket(socket.AF_INET,    # Internet
-                     socket.SOCK_DGRAM) # UDP
-
-sock.bind((UDP_IP, UDP_PORT))
+sock_MSOP = socket.socket(socket.AF_INET,    # Internet
+                          socket.SOCK_DGRAM) # UDP
+sock_MSOP.bind((UDP_IP, UDP_MSOP_PORT))
 
 # Data fetching on socket
-data_byte, addr = sock.recvfrom(bufferSize)
+data_byte, addr = sock_MSOP.recvfrom(bufferSize)
 data_hex = data_byte.hex()
-print("Received message: %s" % data_hex)
+print("MSOP message: %s" % data_hex)
 print("\n\n\n")
+
 
 # Data analysing
 reMSOP_Header = re.compile(MSOP_Header) # Compile MSOP header (string) into a regular expression to search
@@ -70,17 +73,17 @@ for i in range(lenght_LIDAR_Type) :
 
 print("")
 
-reStart_Identifier = re.compile(Start_Identifier)
-for match_obj in reStart_Identifier.finditer(data_hex):
-    offset_start = match_obj.start()
-    offset_end = match_obj.end()
-    print("Start identifier found from byte %d to %d " % (offset_start/2, offset_end/2))
+# reStart_Identifier = re.compile(Start_Identifier)
+# for match_obj in reStart_Identifier.finditer(data_hex):
+#     offset_start = match_obj.start()
+#     offset_end = match_obj.end()
+#     print("Start identifier found from byte %d to %d " % (offset_start/2, offset_end/2))
 
-reEnd_Identifier = re.compile(End_Identifier)
-for match_obj in reEnd_Identifier.finditer(data_hex):
-    offset_start = match_obj.start()
-    offset_end = match_obj.end()
-    print("End identifier found from byte %d to %d " % (offset_start/2, offset_end/2))
+# reEnd_Identifier = re.compile(End_Identifier)
+# for match_obj in reEnd_Identifier.finditer(data_hex):
+#     offset_start = match_obj.start()
+#     offset_end = match_obj.end()
+#     print("End identifier found from byte %d to %d " % (offset_start/2, offset_end/2))
 
 print("")
 
@@ -91,20 +94,18 @@ for i in range(1, 13):  # In one Packet, there are 1->12 data blocks to analyse
     offset_azimuth = (44+100*(i-1))*2 # Start at 44, then 144, 244, 344...
     azimuth = data_hex[offset_azimuth]+data_hex[offset_azimuth+1]+data_hex[offset_azimuth+2]+data_hex[offset_azimuth+3]
     azimuth = int(azimuth, 16)//100
-    distance = [250 for i in range(33)]
-    reflectivity = [255 for i in range(33)]
 
-    for j in range(1, 17): # We can go to 33 but not yet  
+    for j in range(1, 33): # We can go to 33 but not yet  
             # Distance
         offset_distance = offset_azimuth + 4 + 6*j
         distance_hex = data_hex[offset_distance]+data_hex[offset_distance+1]+data_hex[offset_distance+2]+data_hex[offset_distance+3]
-        distance[j] = float(int(distance_hex, 16)/100)
+        distance[j] = float(int(distance_hex, 16)/100)/2
             # Reflectivity
         offset_reflectivity = offset_distance + 4
         reflectivity_hex = data_hex[offset_reflectivity]+data_hex[offset_reflectivity+1]
         reflectivity[j] = int(reflectivity_hex, 16)
 
-        if distance[j] > 250: distance[j] = 0
+        if distance[j] > 150 and distance[j] < 0.2: distance[j] = 250
 
 for i in range(9, 17):
         # Print Distance
