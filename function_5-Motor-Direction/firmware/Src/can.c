@@ -45,7 +45,14 @@
 /* USER CODE BEGIN 0 */
 
 extern int cmdLRM, cmdRRM, cmdSFM, cmdPOS;
-extern int en_MARG, en_MARD, en_MAV, en_POS;
+extern GPIO_PinState en_MARG, en_MARD, en_MAV, en_POS;
+
+/* Carole's code */
+extern int modeSpeed;
+extern int modeSteer;
+
+/* End of Carole's code */
+
 /* USER CODE END 0 */
 
 CAN_HandleTypeDef hcan;
@@ -53,7 +60,6 @@ CAN_HandleTypeDef hcan;
 /* CAN init function */
 void MX_CAN_Init(void)
 {
-
   hcan.Instance = CAN1;
   hcan.Init.Prescaler = 8;
   hcan.Init.Mode = CAN_MODE_NORMAL;
@@ -71,6 +77,9 @@ void MX_CAN_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
+  CAN_FilterConfig();
+
+  __HAL_CAN_ENABLE_IT(&hcan, CAN_IT_FMP0);
 }
 
 void HAL_CAN_MspInit(CAN_HandleTypeDef* canHandle)
@@ -84,7 +93,8 @@ void HAL_CAN_MspInit(CAN_HandleTypeDef* canHandle)
   /* USER CODE END CAN1_MspInit 0 */
     /* CAN1 clock enable */
     __HAL_RCC_CAN1_CLK_ENABLE();
-  
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+
     /**CAN GPIO Configuration    
     PA11     ------> CAN_RX
     PA12     ------> CAN_TX 
@@ -100,7 +110,7 @@ void HAL_CAN_MspInit(CAN_HandleTypeDef* canHandle)
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     /* CAN1 interrupt Init */
-    HAL_NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 0, 1U);
     HAL_NVIC_EnableIRQ(USB_LP_CAN1_RX0_IRQn);
   /* USER CODE BEGIN CAN1_MspInit 1 */
 
@@ -118,7 +128,8 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* canHandle)
   /* USER CODE END CAN1_MspDeInit 0 */
     /* Peripheral clock disable */
     __HAL_RCC_CAN1_CLK_DISABLE();
-  
+
+
     /**CAN GPIO Configuration    
     PA11     ------> CAN_RX
     PA12     ------> CAN_TX 
@@ -144,6 +155,8 @@ void CAN_FilterConfig(void)
 	sFilterConfig.FilterScale = CAN_FILTERSCALE_32BIT;
 	sFilterConfig.FilterIdHigh = 0x0000;
 	sFilterConfig.FilterIdLow = 0x0000;
+	sFilterConfig.FilterMaskIdHigh=0x0000;
+	sFilterConfig.FilterMaskIdLow=0x0000;
 	sFilterConfig.FilterFIFOAssignment = 0;
 	sFilterConfig.FilterActivation = ENABLE;
 	sFilterConfig.BankNumber = 14;
@@ -173,37 +186,26 @@ void CAN_Send(uint8_t* data, uint32_t id)
 }
 
 
-
-int read_cmd(uint8_t data, int *en_M)
+int read_cmd(uint8_t data, GPIO_PinState *en_M)
 {
-	*en_M = data >> 7;
-	uint8_t VMdata = data & 0x7F;
-	return VMdata;
+	uint8_t tmp;
+	uint8_t VMdata;
+
+	tmp= data>>7;
+	if (tmp!=0) *en_M=GPIO_PIN_SET;
+	else *en_M=GPIO_PIN_RESET;
+
+	VMdata = data & 0x7F;
+	return (int)VMdata;
 }
 
-/*int MoteurAR_PWM(uint8_t data, int *en_M)
+int read_mode(uint8_t data) //En soit cette fonction ne sert a rien parce qu'on pourrait simplement recuperer la data en la typecastant int
 {
-	*en_M = data >> 7;
-	uint8_t VMdata = data & 0x7F;
-	return VMdata;
-		if( VMdata < 25) VMdata = 25;
-		else if( VMdata > 75 ) VMdata = 75;
-		
-		return 3200 * ( VMdata / 100.0 );*/
-//}
+	uint8_t VMdata;
 
-
-/*int MoteurAV_PWM(uint8_t data, int *en_M)
-{
-	*en_M = data >> 7;
-	uint8_t VMdata = data & 0x7F;
-	return VMdata;
-	if( VMdata < 40) VMdata = 40;
-	else if( VMdata > 60 ) VMdata = 60;
-	
-	return 3200 * ( VMdata / 100.0 );*/
-//}
-
+	VMdata = data & 0xFF; //On recupere ici les 8 bits (l'encodage du MODE se fait sur les 8 bits)
+	return (int)VMdata;
+}
 
 void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan)
 {
@@ -211,10 +213,17 @@ void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan)
 	/* Consigne vitesse moteur */
 	if(hcan->pRxMsg->StdId == CAN_ID_CMC)
 	{
-		cmdLRM  = read_cmd(hcan->pRxMsg->Data[0], &en_MARG);
-		cmdRRM  = read_cmd(hcan->pRxMsg->Data[1], &en_MARD);
+		cmdLRM = read_cmd(hcan->pRxMsg->Data[0], &en_MARG);
+		cmdRRM = read_cmd(hcan->pRxMsg->Data[1], &en_MARD);
 		cmdSFM = read_cmd(hcan->pRxMsg->Data[2], &en_MAV);
 		cmdPOS = read_cmd(hcan->pRxMsg->Data[3], &en_POS);
+	}
+
+	/* Consigne vitesse moteur */
+	if(hcan->pRxMsg->StdId == CAN_ID_SSC)
+	{
+		modeSpeed = read_mode(hcan->pRxMsg->Data[0]);
+		modeSteer = read_mode(hcan->pRxMsg->Data[1]);
 	}
 		
 	__HAL_CAN_ENABLE_IT(hcan, CAN_IT_FMP0);

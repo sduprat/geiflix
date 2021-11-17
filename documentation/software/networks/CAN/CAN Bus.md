@@ -192,6 +192,46 @@ sudo /sbin/ip link set can0 up type can bitrate 400000
 * **Roll: Roll Angle**
 	* bits 31-0: value in float of the roll angle in degree.
 
+### Speed & Steering Commands (SSC)
+
+* **From:** Raspeberry
+* **To:** NucleoF103
+* **Lenght (Bytes):** 2
+* **Data field:**
+
+|Byte 0 |Byte 1 |
+|:------|:------|
+|SpeedMode | SteerMode |
+
+* **SpeedMode: requested speed mode**
+	* Bit 7-0: Command bits.
+		This bit-field is used to control the speed of the car. The value must be between 0 and 100.
+		The available modes are: 
+		* DISABLED 	: 0x00
+		* STOP 		: 0x32
+		* REVERSE 	: 0x28
+		* WALK 		: 0x37
+		* JOG 		: 0x41
+		* RUN 		: 0x4B
+		* SUPERCAR 	: 0x55
+		* ROCKET 	: 0x5F
+
+		_Note:_ To avoid power problem, the motor's PWM is limited by software.
+
+* **SteerMonde: requested steering mode**
+	* Bits 7-0: Command bits.
+		This bit-field is used to control the steering of the car. The value must be between 0 and 100.The value 0 would be the maximum angle to the left. The value 50 would be going straight forward. The value 100 is the maximum angle to the right.
+		The available modes are : 
+		* DISABLED 	: 0x00
+		* STRAIGHT 	: 0x32
+		* HARD_L	: 0x0A
+		* MODT_L	: 0x19
+		* SOFT_L	: 0x28
+		* HARD_R	: 0x5A
+		* MODT_R	: 0x4B
+		* SOFT_R	: 0x3C
+
+		_Note:_ The maximum turning radius to the left and right are limited by mechanic.
 
 
 ## IDs of the CAN Messages
@@ -205,3 +245,4 @@ sudo /sbin/ip link set can0 up type can bitrate 400000
 |Ultrasonic Sensors 2 (US2)  |0x0      |0x0        |0x1      |0x001 |
 |Orientation Measures 1 (OM1)|0x1      |0x0        |0x1      |0x101 |
 |Orientation Measures 2 (OM2)|0x1      |0x0        |0x2      |0x102 |
+|Speed&Steering Command (SSC)|0x0      |0x2        |0x0      |0x020 |
