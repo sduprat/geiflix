@@ -23,16 +23,16 @@ The projects are (or were) surpervised by:
 
 
 ### Installation
-Clone the repo
-Go to catkin_ws folder 
-Git clone https://github.com/dusty-nv/ros_deep_learning.git
-Go back to /catkin_ws
-catkin_make
-source devel/setup.bash
-3 prompts : 
-roscore     
-roslaunch ros_deep_learning detectnet.ros1.launch input:=/dev/video0 output:=display://0
-rosrun ros_recognition reco_ros.py 
+Clone the repo  <br />
+Go to catkin_ws folder  <br />
+Git clone https://github.com/dusty-nv/ros_deep_learning.git  <br />
+Go back to /catkin_ws  <br />
+catkin_make  <br />
+source devel/setup.bash  <br />
+3 prompts :   <br />
+roscore      <br />
+roslaunch ros_deep_learning detectnet.ros1.launch input:=/dev/video0 output:=display://0  <br />
+rosrun ros_recognition reco_ros.py   <br />
 
 
 
