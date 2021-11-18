@@ -4,6 +4,7 @@ import time
 import can
 import os
 import struct
+import socket
 
 HOST = '192.168.1.10'    # Jetson IP address
 PORT = 6666              # Arbitrary non-privileged port
@@ -17,6 +18,7 @@ OM2 = 0x102
 
 MAX_SPEED_FW = 75
 MAX_SPEED_BW = 25
+SPEED_STOP = 50
 
 '''
 class EthSender(Thread):
@@ -118,6 +120,7 @@ class EthReceiver(Thread):
         self.bus  = can.interface.Bus(channel='can0', bustype='socketcan_native')
 
         self.distance = 0
+        self.angle = 0
         self.speed_cmd = 0
         self.movement = 0
         self.turn = 0
@@ -126,6 +129,7 @@ class EthReceiver(Thread):
 
     def run(self):
         self.distance = 0
+        self.angle = 0
         self.speed_cmd = 0
         # self.movement = 0
         # self.turn = 0
@@ -139,40 +143,45 @@ class EthReceiver(Thread):
             if not data: break
 
             # Split data between header & payload
-            header = data[0:3]
-            payload = data[3:]
-            print("header :", header, "payload:", str(payload))
+            BDist = data[0:8]
+            BAngle = data[8:16]
+            self.distance = int(BDist)
+            self.angle = int(BAngle)
+            print("Distance : ", self.distance, " ; Angle : ", self.angle)
             
             # Update speed cmd according to the distance
-            if (header == b'DST'):  # Distance
-                self.distance = int(payload)
-                if (self.distance > 2.1):
-                    self.enable_speed = 1
-                    self.speed_cmd = MAX_SPEED_FW
-                elif (self.distance < 1.9):
-                    self.enable_speed = 1
-                    self.speed_cmd = MAX_SPEED_BW
-                else:
-                    self.enable_speed = 0
-                print("Distance : ", self.distance)
+            if (self.distance > 2100):
+                self.enable_speed = 1
+                self.speed_cmd = 60
+            elif (self.distance < 1900):
+                self.enable_speed = 1
+                self.speed_cmd = 40
+            else:
+                self.enable_speed = 0
             # elif (header == b'ANG'):  # Angle
 
             # Receive data from Discovery
-            rcvdMsg = self.bus.recv();
+            rcvdMsg = self.bus.recv()
 
             # Detect obstacle from US sensors
+            # if (msg.arbitration_id == US1):
+            #     # Av Gche
+            #     obtacleDetected = int.from_bytes(msg.data[0:2], byteorder='big') < 50
+            # elif (msg.arbitration_id == US1):
+            #     # Av Dte
+            #     obtacleDetected = int.from_bytes(msg.data[2:4], byteorder='big') < 50
             if (msg.arbitration_id == US1):
-                obtacleDetected = int.from_bytes(msg.data[0:2], byteorder='big') < 50
-            elif (msg.arbitration_id == US1):
-                obtacleDetected = int.from_bytes(msg.data[2:4], byteorder='big') < 50
-            elif (msg.arbitration_id == US1):
-                obtacleDetected = int.from_bytes(msg.data[4:6], byteorder='big') < 50
+                # Arr Centre
+                obtacleDetected = (int.from_bytes(msg.data[4:6], byteorder='big') < 50) and (self.speed_cmd < SPEED_STOP)
+            # elif (msg.arbitration_id == US2):
+            #     # Arr Gche
+            #     obtacleDetected = int.from_bytes(msg.data[0:2], byteorder='big') < 50
+            # elif (msg.arbitration_id == US2):
+            #     # Arr Dte
+            #     obtacleDetected = int.from_bytes(msg.data[2:4], byteorder='big') < 50
             elif (msg.arbitration_id == US2):
-                obtacleDetected = int.from_bytes(msg.data[0:2], byteorder='big') < 50
-            elif (msg.arbitration_id == US2):
-                obtacleDetected = int.from_bytes(msg.data[2:4], byteorder='big') < 50
-            elif (msg.arbitration_id == US2):
-                obtacleDetected = int.from_bytes(msg.data[4:6], byteorder='big') < 50
+                # Av Centre
+                obtacleDetected = (int.from_bytes(msg.data[4:6], byteorder='big') < 50) and (self.speed_cmd > SPEED_STOP)
 
             if (self.enable_speed and not(obstacleDetected)):
                 self.speed_cmd |= (1 << 7)
@@ -207,9 +216,6 @@ class EthReceiver(Thread):
             self.bus.send(sendMsg)
 
         conn.close()
-
-# Echo server program
-import socket
 
 if __name__ == "__main__":
 
