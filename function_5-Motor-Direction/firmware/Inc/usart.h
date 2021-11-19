@@ -61,6 +61,8 @@ extern void _Error_Handler(char *, int);
 
 void MX_USART2_UART_Init(void);
 
+void usart_send_message(uint8_t * mes, uint16_t size);
+
 /* USER CODE BEGIN Prototypes */
 
 /* USER CODE END Prototypes */
