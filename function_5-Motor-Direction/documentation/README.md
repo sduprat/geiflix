@@ -7,8 +7,8 @@ RQ: Firmware has been converted to STMCubeIDE v7 since 09/2021.
 ## WHAT IS AVAILABLE
 
 This function retrieves data from the Raspi through the CAN bus. Two types of CAN frames can be used with this function (either one or the other) : 
-* Control Motor Command (CMC)* frames, of ID 0x010
-* Speed & Steering Commands (SSC)* frames, of ID 0x020  
+* *Control Motor Command (CMC)* frames, of ID 0x010
+* *Speed & Steering Commands (SSC)* frames, of ID 0x020  
   
 Further information about the CAN and the content of these frames is available in the Git at geiflix/documentation/software/networks/CAN/Can Bus.md
 
