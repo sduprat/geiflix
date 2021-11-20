@@ -221,11 +221,11 @@ sudo /sbin/ip link set can0 up type can bitrate 400000
 		This bit-field is used to control the speed of the car. The value must be between 0 and 100. 
 		The available modes are: 
 		* DISABLED 	: 0x00
-		* STOP 		: 0x32
-		* REVERSE 	: 0x28
-		* WALK 		: 0x37
-		* JOG 		: 0x41
-		* RUN 		: 0x4B
+		* STOP 		: 0x32 //Arret
+		* REVERSE 	: 0x28 //Marche arriere
+		* WALK 		: 0x37 //Premiere
+		* JOG 		: 0x41 //Seconde
+		* RUN 		: 0x4B //Troisieme
 
 		_Note:_ To avoid power problem, the motor's PWM is limited by software.
 
@@ -234,13 +234,13 @@ sudo /sbin/ip link set can0 up type can bitrate 400000
 		This bit-field is used to control the steering of the car. The value must be between 0 and 100.The value 0 would be the maximum angle to the left. The value 50 would be going straight forward. The value 100 is the maximum angle to the right.
 		The available modes are : 
 		* DISABLED 	: 0x00
-		* STRAIGHT 	: 0x32
-		* HARD_L	: 0x0A
-		* MODT_L	: 0x19
-		* SOFT_L	: 0x28
-		* HARD_R	: 0x5A
-		* MODT_R	: 0x4B
-		* SOFT_R	: 0x3C
+		* STRAIGHT 	: 0x32 //Roues droites
+		* HARD_L	: 0x0A //Hard turn to the left
+		* MODT_L	: 0x19 //Moderate turn to the left
+		* SOFT_L	: 0x28 //Soft turn to the left
+		* HARD_R	: 0x5A //Hard turn to the right
+		* MODT_R	: 0x4B //Moderate turn to the right
+		* SOFT_R	: 0x3C //soft turn to the right
 
 		_Note:_ The maximum turning radius to the left and right are limited by mechanic.
 
