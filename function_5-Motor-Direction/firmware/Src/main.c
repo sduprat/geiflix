@@ -49,14 +49,14 @@
 #include "control.h"
 #include "calibrate.h"
 
+/* USER CODE BEGIN Includes */
+
 /* Ici, définir le mode de fonctionnement du code
  * 0- Calibration
  * 1- Trames 0x010 (CMC)
  * 2- Trames 0x020 (SSC)
  */
 #define MODE 0
-
-/* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
 
