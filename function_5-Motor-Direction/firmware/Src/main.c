@@ -46,6 +46,9 @@
 #include "usart.h"
 #include "gpio.h"
 #include "power.h"
+#include "control_direction.h"
+
+
 
 /* USER CODE BEGIN Includes */
 
@@ -55,8 +58,8 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-int UPDATE_CMD_FLAG = 1;
-int SEND_CAN = 1;
+int UPDATE_CMD_FLAG = 0;
+int SEND_CAN = 0;
 
 /* Tous ADC sur 12 bits pleine echelle 3.3V
  ADCBUF[0] mesure batterie
@@ -69,7 +72,19 @@ uint32_t ADCBUF[5];
 
 int cmdLRM = 50, cmdRRM = 50, cmdSFM = 50, cmdPOS = 50; // 0 � 100 Moteur gauche, droit, avant, angle avant
 
+// 0xB2 = enable moteur + moteur à l'arret
+// 0x80 = enable moteur + a fond a droite
+// 0xE4 = enable moteur + a fond a gauche
+
+int valcaptr = 0;
+
 uint32_t VMG_mes = 0, VMD_mes = 0, per_vitesseG = 0, per_vitesseD = 0;
+
+/* GPS coordinates if GPS not connected */
+float lat1 = 1.0;
+float lat2 = 1.0;
+float lon1 = 1.0;
+float lon2 = 1.0;
 
 /* 				Enable Moteurs 				*/
 /* 	GPIO_PIN_SET : activation   */
@@ -86,8 +101,8 @@ CanTxMsgTypeDef TxMessage;
 CanRxMsgTypeDef RxMessage;
 uint8_t data[8] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
 
-
 extern CAN_HandleTypeDef hcan;
+
 
 
 /* USER CODE END PV */
@@ -206,6 +221,9 @@ int main(void)
     /* ADC1 */
     HAL_ADC_Start_DMA (&hadc1,ADCBUF,5);
     
+    /* CAN */
+    CAN_FilterConfig();
+    __HAL_CAN_ENABLE_IT(&hcan, CAN_IT_FMP0);
     /* USER CODE END 2 */
     
     /* Infinite loop */
@@ -223,19 +241,42 @@ int main(void)
         /* Update motors command*/
         if (UPDATE_CMD_FLAG){
             UPDATE_CMD_FLAG = 0;
-            
-            wheels_set_speed(en_MARD, en_MARG, cmdRRM, cmdLRM);
-            
+
+
+            en_MARD = GPIO_PIN_SET;
+            en_MARG = GPIO_PIN_SET;
+        	wheels_set_speed(en_MARD, en_MARG, 50, 50);
+
+        	en_POS = GPIO_PIN_SET;
+            steering_set_position(en_POS, 50);
+
+            //wheels_set_speed(en_MARD, en_MARG, 60, 60);
+        	/*
+        	distance = get_distance(lat1, lon1, lat2, lon2);
+
+        	movement_without_GPS(distance);
+			*/
+
+            /*
+
+            en_POS = GPIO_PIN_SET;
+            steering_set_position(en_POS, 0x32); // remise au milieu
+
+            cmdPOS = 0x50; //A fond à droite
+
             // Assure la non-contradiction des commandes moteurs
             if ((en_MAV == GPIO_PIN_SET) && (en_POS == GPIO_PIN_SET))
             {
-                en_POS = GPIO_PIN_RESET;
+                en_MAV = GPIO_PIN_RESET;
             }
-            if (!steering_is_a_button_pressed()){
-                steering_set_speed(en_MAV, cmdSFM);
-                //steering_set_position(en_POS, cmdPOS);
+
+             if (!steering_is_a_button_pressed()){
+                //steering_set_speed(en_MAV, cmdSFM);
+                steering_set_position(en_POS, cmdPOS);
             }
-            steering_move_with_button();
+
+            steering_set_position(en_POS, cmdPOS);
+            wheels_set_speed(en_MARD, en_MARG, 50, 50);*/
         }
         
         /* CAN */
@@ -316,7 +357,7 @@ void SystemClock_Config(void)
     HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
     
     /* SysTick_IRQn interrupt configuration */
-    HAL_NVIC_SetPriority(SysTick_IRQn, 0, 15U);
+    HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
 }
 
 /* USER CODE BEGIN 4 */
