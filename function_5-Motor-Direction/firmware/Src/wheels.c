@@ -1,8 +1,9 @@
 #include "wheels.h"
 
-#define MAX_SPEED_WHEEL 95 //75
-#define MIN_SPEED_WHEEL 25 //25
-
+#define MAX_SPEED_WHEEL 75
+#define MIN_SPEED_WHEEL 25
+/* Limitations moteurs arrières de préférence entre 40 et 60.
+   Bon, on l'a augmenté entre 25 et 75 pour aller un peu plus vite... */
 
 void wheels_set_speed(GPIO_PinState en_right, GPIO_PinState en_left, int speed_right, int speed_left){
 		// Moteur avant
