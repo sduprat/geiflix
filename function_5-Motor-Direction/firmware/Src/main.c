@@ -47,6 +47,14 @@
 #include "gpio.h"
 #include "power.h"
 #include "control.h"
+#include "calibrate.h"
+
+/* Ici, définir le mode de fonctionnement du code
+ * 0- Calibration
+ * 1- Trames 0x010 (CMC)
+ * 2- Trames 0x020 (SSC)
+ */
+#define MODE 0
 
 /* USER CODE BEGIN Includes */
 
@@ -72,13 +80,14 @@ int cmdLRM = 50, cmdRRM = 50, cmdSFM = 50, cmdPOS = 50; // 0 � 100 Moteur gauc
 
 uint32_t VMG_mes = 0, VMD_mes = 0, per_vitesseG = 0, per_vitesseD = 0;
 
-/* 				Enable Moteurs 				*/
-/* 	GPIO_PIN_SET : activation   */
+/* Enable Moteurs 				*/
+/* GPIO_PIN_SET : activation    */
 /* GPIO_PIN_RESET : pont ouvert */
 GPIO_PinState en_MARG = GPIO_PIN_RESET;
 GPIO_PinState en_MARD = GPIO_PIN_RESET;
 GPIO_PinState en_MAV = GPIO_PIN_RESET;
 GPIO_PinState en_POS = GPIO_PIN_RESET;
+
 /*********************************Informations rotation volant********************************/
 /* mesure angulaire potentiometre amplitudes volant +/- 17 % environ autour du centre        */
 /* PWM = 0.5 (50) % arret, PWM = 0.4 tourne gauche, PWM = 0.6 tourne droite                  */ 
@@ -87,13 +96,10 @@ CanTxMsgTypeDef TxMessage;
 CanRxMsgTypeDef RxMessage;
 uint8_t data[8] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
 
-/* Ajouts de Carole */
 int modeSpeed = 0;
 int modeSteer = 0;
-/* Fin ajouts de Carole */
 
 extern CAN_HandleTypeDef hcan;
-
 
 /* USER CODE END PV */
 
@@ -115,14 +121,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
     }
 }
 
-
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
     /***               Mesures des vitesses moteurs                      ***
      * F�quences entr�es micro, sorties capteurs, entre environ 2hz � 80 hz *
-     * Timer 2,4 sur 16 bits (65535)cp ->compte p�riode 9999 pour 1s (1Hz)  *
-     *                               ->compte p�riode 1000 pour 0.1s (10Hz) *
-     * Rapport r�duction 2279/64 ~ 36 impulsions/tour de roue               *
+     * Timer 2,4 sur 16 bits (65535)cp ->compte p�riode 9999 pour 1s (1Hz)   *
+     *                               ->compte p�riode 1000 pour 0.1s (10Hz)  *
+     * Rapport r�duction 2279/64 ~ 36 impulsions/tour de roue                *
      * unite de 0.01*tr/mn = 168495/ cp                                     *
      */
     if (htim->Instance==TIM2)
@@ -140,8 +145,6 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
         __HAL_TIM_SET_COUNTER(&htim4,0);// mise a zero compteur apres capture
     }
 }
-
-
 
 /* USER CODE END 0 */
 
@@ -188,11 +191,6 @@ int main(void)
     
     /* Initialisations */
     
-    /*gestion systic 1Khz*/
-    
-    //uint32_t usTicks = HAL_RCC_GetSysClockFreq() / 1000;
-    // HAL_SYSTICK_Config(usTicks);
-    
     /* PWM MOTEURS */
     HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
     HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
@@ -217,7 +215,7 @@ int main(void)
     /* USER CODE BEGIN WHILE */
     
     /* Initialisation Steering */
-    steering_Init();
+    //steering_Init();
     
     while (1)
     {
@@ -229,25 +227,26 @@ int main(void)
         if (UPDATE_CMD_FLAG){
             UPDATE_CMD_FLAG = 0;
             
-            car_control(modeSpeed, modeSteer);
+			#if (MODE == 0)
+            	calibrate();
+			#elif (MODE == 1)
+            	wheels_set_speed(en_MARD, en_MARG, cmdRRM, cmdLRM);
 
-            /*
-             * ORIGINAL CODE working with 0x010 messages from the CAN
-             *
-            wheels_set_speed(en_MARD, en_MARG, cmdRRM, cmdLRM);
+                en_POS = GPIO_PIN_SET;
+                // Assure la non-contradiction des commandes moteurs
+                if ((en_MAV == GPIO_PIN_SET) && (en_POS == GPIO_PIN_SET))
+                {
+                	en_MAV = GPIO_PIN_RESET;
+                }
+                if (!steering_is_a_button_pressed()){
+                    //steering_set_speed(en_MAV, cmdSFM);
+                    steering_set_position(en_POS, cmdPOS);
+                }
+                steering_move_with_button();
+			#else
+            	car_control(modeSpeed, modeSteer);
+			#endif
 
-            en_POS = GPIO_PIN_SET;
-            // Assure la non-contradiction des commandes moteurs
-            if ((en_MAV == GPIO_PIN_SET) && (en_POS == GPIO_PIN_SET))
-            {
-                en_MAV = GPIO_PIN_RESET;
-            }
-            if (!steering_is_a_button_pressed()){
-                //steering_set_speed(en_MAV, cmdSFM);
-                steering_set_position(en_POS, cmdPOS);
-            }
-            steering_move_with_button();
-            */
         }
         
         /* CAN */

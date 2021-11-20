@@ -54,7 +54,9 @@ typedef void (*CanRxCallback)(CAN_RxHeaderTypeDef *rxHeader, uint8_t data[]);
  */
 void CAN_Init(void);
 
-void CAN_Send(uint8_t std_id, uint8_t ext_id, uint8_t len, uint8_t data[]);
+/*void CAN_Send(uint8_t std_id, uint8_t ext_id, uint8_t len, uint8_t data[]);*/
+
+void CAN_Send(uint8_t* data, uint32_t id);
 
 void CAN_AddRXCallback(CanRxCallback callback);
 

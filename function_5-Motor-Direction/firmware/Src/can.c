@@ -47,11 +47,8 @@
 extern int cmdLRM, cmdRRM, cmdSFM, cmdPOS;
 extern GPIO_PinState en_MARG, en_MARD, en_MAV, en_POS;
 
-/* Carole's code */
 extern int modeSpeed;
 extern int modeSteer;
-
-/* End of Carole's code */
 
 /* USER CODE END 0 */
 
@@ -219,7 +216,7 @@ void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan)
 		cmdPOS = read_cmd(hcan->pRxMsg->Data[3], &en_POS);
 	}
 
-	/* Consigne vitesse moteur */
+	/* Consigne vitesse et direction */
 	if(hcan->pRxMsg->StdId == CAN_ID_SSC)
 	{
 		modeSpeed = read_mode(hcan->pRxMsg->Data[0]);

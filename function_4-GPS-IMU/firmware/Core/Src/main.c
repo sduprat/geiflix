@@ -116,8 +116,8 @@ int main(void)
 	/* Todo: activate it when a driver is connected
 	 * otherwise, it is flooding system with interrupt
 	 */
-	//CAN_Init();
-	//CAN_AddRXCallback(CAN_FIFO_0_Callback);
+	CAN_Init();
+	CAN_AddRXCallback(CAN_FIFO_0_Callback);
 
 	/* Initialisation of AHRS */
 	AHRS_Init();
@@ -125,15 +125,16 @@ int main(void)
 	/* Various initializations */
 	GLOBVAR_Init();
 	SCHEDULER_Init();
-	SCHEDULER_Run();
+	/*SCHEDULER_Run();*/
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
+	uint8_t data[8]={1,2,3,4,5,6,7,8};
 	while (1)
 	{
 		/* USER CODE END WHILE */
-
+		CAN_Send(data, 0x201);
 		/* USER CODE BEGIN 3 */
 		//HAL_Delay(1000);
 		//printf ("coucou\n");

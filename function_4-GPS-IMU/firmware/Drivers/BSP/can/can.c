@@ -99,7 +99,7 @@ void CAN_Init(void)
 	hcan.Init.TimeSeg1 = CAN_BS1_7TQ;
 	hcan.Init.TimeSeg2 = CAN_BS2_2TQ;
 	hcan.Init.TimeTriggeredMode = DISABLE;
-	hcan.Init.AutoBusOff = DISABLE;
+	hcan.Init.AutoBusOff = ENABLE;
 	hcan.Init.AutoWakeUp = DISABLE;
 	hcan.Init.AutoRetransmission = DISABLE;
 	hcan.Init.ReceiveFifoLocked = DISABLE;
@@ -216,28 +216,50 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef *hcan)
  * @param hcan: CAN handle pointer
  * @retval None
  */
-void CAN_Send(uint8_t std_id, uint8_t ext_id, uint8_t len, uint8_t data[])
-{
+/*void CAN_Send(uint8_t std_id, uint8_t ext_id, uint8_t len, uint8_t data[])
+{*/
 	/* Configure Transmission header */
-	TxHeader.StdId = std_id;
+/*	TxHeader.StdId = std_id;
 	TxHeader.ExtId = ext_id;
 	TxHeader.RTR = CAN_RTR_DATA;
 	TxHeader.IDE = CAN_ID_STD;
 	TxHeader.DLC = len;
-	TxHeader.TransmitGlobalTime = DISABLE;
+	TxHeader.TransmitGlobalTime = DISABLE;*/
 
 	/* Set the data to be transmitted */
-	for(int i=0; i < len; i++)
+/*	for(int i=0; i < len; i++)
+		TxData[i] = data[i];
+*/
+	/* Start the Transmission process */
+/*	if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK)
+	{
+*/		/* Transmission request Error */
+/*		while (1);
+	}
+	HAL_Delay(10);
+}*/
+
+void CAN_Send(uint8_t* data, uint32_t id)
+{
+	TxHeader.StdId = id;
+	TxHeader.ExtId = 0;
+	TxHeader.RTR = CAN_RTR_DATA;
+	TxHeader.IDE = CAN_ID_STD;
+	TxHeader.DLC = 8;
+	TxHeader.TransmitGlobalTime = DISABLE;
+
+	for(int i=0; i < 8; i++)
 		TxData[i] = data[i];
 
 	/* Start the Transmission process */
-	if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK)
-	{
-		/* Transmission request Error */
-		while (1);
+		if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK)
+		{
+			/* Transmission request Error */
+			while (1);
+		}
+		HAL_Delay(10);
 	}
-	HAL_Delay(10);
-}
+
 
 void CAN_AddRXCallback(CanRxCallback callback)
 {
