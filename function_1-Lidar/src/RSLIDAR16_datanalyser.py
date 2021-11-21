@@ -13,8 +13,7 @@ UDP_IP = "192.168.1.102"
 UDP_PORT = 6699
 # LIDAR
 bufferSize = 1248
-    # We are at 600rpm, so 0.2° of precision -> 1801 points for each channel
-tab_distance = [[255 for azimuth in range(3601)] * channel for channel in range(17)]
+tab_distance = [[255 for azimuth in range(361)] * channel for channel in range(17)]
 new_azimuth = 0; old_azimuth = 0; missing_azimuth = 0
 nb_nearby_objects = 0
 object_detected = 0
@@ -42,7 +41,7 @@ while True:
         # Azimuth
         offset_azimuth = (44+100*(data_block-1))*2 # Start at 44, then 144, 244, 344...
         azimuth = data_hex[offset_azimuth]+data_hex[offset_azimuth+1]+data_hex[offset_azimuth+2]+data_hex[offset_azimuth+3]
-        azimuth = int(azimuth, 16)//10
+        azimuth = int(azimuth, 16)//100
 
         for channel in range(1, 17): # We can go to 33 but not yet  
             # Distance (/100 for meters, /2 for one-way distance)
@@ -58,26 +57,26 @@ while True:
             if distance > 0.2 and distance < 150.0 :
                 tab_distance[channel][azimuth] = distance
 
-                # Perform interpolation
-                new_azimuth = azimuth
-                    # Adjust for rollover from 359.9° to 0°
-                if new_azimuth < old_azimuth:
-                    new_azimuth += 3600
-                    # Calculate missing azimuth
-                missing_azimuth = old_azimuth + (new_azimuth-old_azimuth)//2
-                    #Adjust for rollover from 359.9° to 0°
-                if missing_azimuth > 3600:
-                    missing_azimuth -= 3600
-                    # Calculate mean distance between old azimuth and new azimuth
-                tab_distance[channel][missing_azimuth] = (tab_distance[channel][old_azimuth]+tab_distance[channel][azimuth])/2
+        #         # Perform interpolation
+        #         new_azimuth = azimuth
+        #             # Adjust for rollover from 359.9° to 0°
+        #         if new_azimuth < old_azimuth:
+        #             new_azimuth += 3600
+        #             # Calculate missing azimuth
+        #         missing_azimuth = old_azimuth + (new_azimuth-old_azimuth)//2
+        #             #Adjust for rollover from 359.9° to 0°
+        #         if missing_azimuth > 3600:
+        #             missing_azimuth -= 3600
+        #             # Calculate mean distance between old azimuth and new azimuth
+        #         tab_distance[channel][missing_azimuth] = (tab_distance[channel][old_azimuth]+tab_distance[channel][azimuth])/2
                     
-        old_azimuth = azimuth
+        # old_azimuth = azimuth
 
-        print(f"MODIF chan. {16}, azimuth {missing_azimuth}, distance = {tab_distance[16][missing_azimuth]}")
-        print(f"For channel {16}, azimuth {azimuth}, distance = {tab_distance[16][azimuth]}")
+        # print(f"MODIF chan. {16}, azimuth {missing_azimuth}, distance = {tab_distance[16][missing_azimuth]}")
+        # print(f"For channel {16}, azimuth {azimuth}, distance = {tab_distance[16][azimuth]}")
         
     # Detection of nearby objects
-    for azimuth in range(3601):
+    for azimuth in range(361):
         if tab_distance[16][azimuth] < 0.5 :
             nb_nearby_objects += 1
 
