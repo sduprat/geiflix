@@ -107,7 +107,7 @@ void CAN_Init(void)
 
 	if (HAL_CAN_Init(&hcan) != HAL_OK)
 	{
-		while (1);
+		while(1);
 	}
 
 	/*##-2- Configure the CAN Filter ###########################################*/

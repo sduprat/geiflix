@@ -26,7 +26,7 @@ An other one is provided, TESEO_GetCoords_DD, which return coordinates in format
 Both format can be used on google maps
 
 ## CAN
-CAN driver (found in drivers/BSP/can) is currently not enabled (init is commented out in main function) because, whitout hardware transceiver, the interrupt handler was overwhelming CPU (spurious interrupt). Code is based on ST example and should work. Currently, no ID and no frame are defined.
+CAN driver (found in drivers/BSP/can) is currently not enabled (init is commented out in main function) because, without hardware transceiver, the interrupt handler was overwhelming CPU (spurious interrupt). Code is based on ST example and should work. Currently, no ID and no frame are defined.
 
 ## AHRS
 AHRS (for Attitude and Heading Reference System) is a sensor fusion algorithm that aim to provide a compass out of accelerometer, gyroscope and magnetometer. It is based on AHRS from function 3, but with a code heavily reworked. Sensor access functions have been removed because sensors are differents from function 3 and 4 but also because it's not the place.

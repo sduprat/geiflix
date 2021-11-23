@@ -56,7 +56,7 @@
  * 1- Trames 0x010 (CMC)
  * 2- Trames 0x020 (SSC)
  */
-#define MODE 0
+#define MODE 2
 
 /* USER CODE END Includes */
 
