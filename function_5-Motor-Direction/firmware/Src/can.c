@@ -46,6 +46,10 @@
 
 extern int cmdLRM, cmdRRM, cmdSFM, cmdPOS;
 extern GPIO_PinState en_MARG, en_MARD, en_MAV, en_POS;
+
+extern int modeSpeed;
+extern int modeSteer;
+
 /* USER CODE END 0 */
 
 CAN_HandleTypeDef hcan;
@@ -179,7 +183,6 @@ void CAN_Send(uint8_t* data, uint32_t id)
 }
 
 
-
 int read_cmd(uint8_t data, GPIO_PinState *en_M)
 {
 	uint8_t tmp;
@@ -193,29 +196,13 @@ int read_cmd(uint8_t data, GPIO_PinState *en_M)
 	return (int)VMdata;
 }
 
-/*int MoteurAR_PWM(uint8_t data, int *en_M)
+int read_mode(uint8_t data) //En soit cette fonction ne sert a rien parce qu'on pourrait simplement recuperer la data en la typecastant int
 {
-	*en_M = data >> 7;
-	uint8_t VMdata = data & 0x7F;
-	return VMdata;
-		if( VMdata < 25) VMdata = 25;
-		else if( VMdata > 75 ) VMdata = 75;
-		
-		return 3200 * ( VMdata / 100.0 );*/
-//}
+	uint8_t VMdata;
 
-
-/*int MoteurAV_PWM(uint8_t data, int *en_M)
-{
-	*en_M = data >> 7;
-	uint8_t VMdata = data & 0x7F;
-	return VMdata;
-	if( VMdata < 40) VMdata = 40;
-	else if( VMdata > 60 ) VMdata = 60;
-	
-	return 3200 * ( VMdata / 100.0 );*/
-//}
-
+	VMdata = data & 0xFF; //On recupere ici les 8 bits (l'encodage du MODE se fait sur les 8 bits)
+	return (int)VMdata;
+}
 
 void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan)
 {
@@ -223,10 +210,17 @@ void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan)
 	/* Consigne vitesse moteur */
 	if(hcan->pRxMsg->StdId == CAN_ID_CMC)
 	{
-		cmdLRM  = read_cmd(hcan->pRxMsg->Data[0], &en_MARG);
-		cmdRRM  = read_cmd(hcan->pRxMsg->Data[1], &en_MARD);
+		cmdLRM = read_cmd(hcan->pRxMsg->Data[0], &en_MARG);
+		cmdRRM = read_cmd(hcan->pRxMsg->Data[1], &en_MARD);
 		cmdSFM = read_cmd(hcan->pRxMsg->Data[2], &en_MAV);
 		cmdPOS = read_cmd(hcan->pRxMsg->Data[3], &en_POS);
+	}
+
+	/* Consigne vitesse et direction */
+	if(hcan->pRxMsg->StdId == CAN_ID_SSC)
+	{
+		modeSpeed = read_mode(hcan->pRxMsg->Data[0]);
+		modeSteer = read_mode(hcan->pRxMsg->Data[1]);
 	}
 		
 	__HAL_CAN_ENABLE_IT(hcan, CAN_IT_FMP0);

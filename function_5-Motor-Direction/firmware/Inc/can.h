@@ -54,8 +54,10 @@
 extern CAN_HandleTypeDef hcan;
 
 /* USER CODE BEGIN Private defines */
-#define CAN_ID_CMC 0x010 	// Control Motor Command
-#define CAN_ID_MS	 0x100	// Motor Sensor
+#define CAN_ID_CMC 	0x010 	// Control Motor Command
+#define CAN_ID_MS	0x100	// Motor Sensor
+#define CAN_ID_SSC 	0x020	// Speed and Steering Command
+
 /* USER CODE END Private defines */
 
 extern void _Error_Handler(char *, int);
