@@ -40,6 +40,7 @@ class EthReceiver(Thread):
         # self.movement = 0
         # self.turn = 0
         # self.enable_steering = 0
+        usAvG,usAvD,usArrC,usArrG,usArrD,usAvC = 0,0,0,0,0,0
         
         while True :
             
@@ -49,6 +50,7 @@ class EthReceiver(Thread):
             # Receive data from Jetson (eth)
             fromJetson = self.connSock.recv(1024)
             
+            # Leave if no more data coming from Jetson (= eth link lost)
             if not fromJetson: 
                 print('No data from Jetson')
                 break
@@ -56,12 +58,20 @@ class EthReceiver(Thread):
             # Split data between distance (1st 8 B) & angle (following 8 B)
             rawDist = fromJetson[0:8]
             rawAngle = fromJetson[8:16]
-            print("Raw distance : ", rawDist, " ; Raw angle : ", rawAngle)
             if rawDist: self.distance = int(rawDist)
             if rawAngle: self.angle = int(rawAngle)
-            print("Distance : ", self.distance, " ; Angle : ", self.angle)
+            print("d : ", self.distance, " ; a : ", self.angle)
+
+            # Update speed cmd according to the distance
+            self.enable_speed = True
+            if (self.distance > 2100):
+                self.speed_cmd = 60
+            elif (self.distance < 1900):
+                self.speed_cmd = 40
+            else:
+                self.enable_speed = False
             
-            # Detect obstacle from US sensors
+            # Get US sensors values
             if (fromDiscov.arbitration_id == US1):
                 # Av Gche
                 usAvG = int.from_bytes(fromDiscov.data[0:2], byteorder='big')
@@ -77,24 +87,14 @@ class EthReceiver(Thread):
                 # Av Centre
                 usAvC = int.from_bytes(fromDiscov.data[4:6], byteorder='big')
             
+            # Determine obstacle presence given direction (FW/BW) & US values
             obstacleDetected = ((self.speed_cmd > SPEED_STOP) and \
                                         ((usAvD < 50) or (usAvG < 50) or (usAvC < 50))) or \
                                 ((self.speed_cmd < SPEED_STOP) and \
                                         ((usArrD < 50) or (usArrG < 50) or (usArrC < 50)))
+            self.enable_speed &= not obstacleDetected
                         
-            # Update speed cmd according to the distance
-            if obstacleDetected:
-                self.enable_speed = 0
-            else:
-                if (self.distance > 2100):
-                    self.enable_speed = 1
-                    self.speed_cmd = 60
-                elif (self.distance < 1900):
-                    self.enable_speed = 1
-                    self.speed_cmd = 40
-                else:
-                    self.enable_speed = 0
-                        
+            # Enable or not speed in motor command
             if (self.enable_speed):
                 self.speed_cmd |= (1 << 7)
             else:
@@ -113,7 +113,8 @@ class EthReceiver(Thread):
 
                 print("mv:",cmd_mv,"turn:",cmd_turn)
             '''
-
+            
+            # Compose & send CAN message to Nucleo
             toNucleo = can.Message(arbitration_id=MCM,data=[self.speed_cmd, self.speed_cmd, 0,0,0,0,0,0],extended_id=False)
             self.canBus.send(toNucleo)
 
