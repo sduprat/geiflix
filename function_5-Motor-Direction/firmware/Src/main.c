@@ -217,7 +217,7 @@ int main(void)
     while (1)
     {
         /* USER CODE END WHILE */
-        
+
         /* USER CODE BEGIN 3 */
 
         /* Update motors command*/
@@ -226,6 +226,7 @@ int main(void)
             
             wheels_set_speed(en_MARD, en_MARG, cmdRRM, cmdLRM);
             
+            //en_POS = GPIO_PIN_SET;
             // Assure la non-contradiction des commandes moteurs
             if ((en_MAV == GPIO_PIN_SET) && (en_POS == GPIO_PIN_SET))
             {
@@ -240,7 +241,7 @@ int main(void)
         
         /* CAN */
         // Envoi des mesures
-        /*if (SEND_CAN){
+        if (SEND_CAN){
             SEND_CAN = 0;
             data[0] = (ADCBUF[1] >> 8) & 0xFF; // Vol_mes
             data[1] = ADCBUF[1] & 0xFF;
@@ -255,7 +256,7 @@ int main(void)
             data[7] = VMD_mes & 0xFF;
             
             CAN_Send(data, CAN_ID_MS);
-        }*/
+        }
         
     }
     /* USER CODE END 3 */
