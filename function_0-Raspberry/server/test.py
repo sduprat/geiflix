@@ -31,11 +31,16 @@ count = 0
 print('\n\rCAN Rx test')
 print('Bring up CAN0....')
 
+#CAN IDs for ultrasound sensors
 US1 = 0x000
 US2 = 0x001
 
+#An obstacle is detected is ultrasound vaule inferior to this threshold
 THRESHOLD_OBSTACLE = 50
 
+#Distance matrix for ultrasound values
+#[ [front-left, front-center, front-right],
+#  [rear-left, rear-center, rear-right] ]
 distance = [[0, 0, 0],[0, 0, 0]]
 
 # Bring up can0 interface at 400kbps
