@@ -6,7 +6,8 @@ import os
 import struct
 import socket
 
-HOST = '192.168.1.10'    # Jetson IP address
+#HOST = '192.168.1.10'    # Jetson IP address
+HOST = '192.168.1.2'
 PORT = 6666              # Arbitrary non-privileged port
 
 MCM = 0x010
@@ -145,8 +146,9 @@ class EthReceiver(Thread):
             # Split data between header & payload
             BDist = data[0:8]
             BAngle = data[8:16]
-            self.distance = int(BDist)
-            self.angle = int(BAngle)
+            print("Raw distance : ", BDist, " ; Raw angle : ", BAngle)
+            if BDist: self.distance = int(BDist)
+            if BAngle: self.angle = int(BAngle)
             print("Distance : ", self.distance, " ; Angle : ", self.angle)
             
             # Update speed cmd according to the distance
@@ -164,24 +166,24 @@ class EthReceiver(Thread):
             rcvdMsg = self.bus.recv()
 
             # Detect obstacle from US sensors
-            # if (msg.arbitration_id == US1):
+            # if (rcvdMsg.arbitration_id == US1):
             #     # Av Gche
-            #     obtacleDetected = int.from_bytes(msg.data[0:2], byteorder='big') < 50
-            # elif (msg.arbitration_id == US1):
+            #     obstacleDetected = int.from_bytes(rcvdMsg.data[0:2], byteorder='big') < 50
+            # elif (rcvdMsg.arbitration_id == US1):
             #     # Av Dte
-            #     obtacleDetected = int.from_bytes(msg.data[2:4], byteorder='big') < 50
-            if (msg.arbitration_id == US1):
+            #     obstacleDetected = int.from_bytes(rcvdMsg.data[2:4], byteorder='big') < 50
+            if (rcvdMsg.arbitration_id == US1):
                 # Arr Centre
-                obtacleDetected = (int.from_bytes(msg.data[4:6], byteorder='big') < 50) and (self.speed_cmd < SPEED_STOP)
-            # elif (msg.arbitration_id == US2):
+                obstacleDetected = (int.from_bytes(rcvdMsg.data[4:6], byteorder='big') < 50) and (self.speed_cmd < SPEED_STOP)
+            # elif (rcvdMsg.arbitration_id == US2):
             #     # Arr Gche
-            #     obtacleDetected = int.from_bytes(msg.data[0:2], byteorder='big') < 50
-            # elif (msg.arbitration_id == US2):
+            #     obstacleDetected = int.from_bytes(rcvdMsg.data[0:2], byteorder='big') < 50
+            # elif (rcvdMsg.arbitration_id == US2):
             #     # Arr Dte
-            #     obtacleDetected = int.from_bytes(msg.data[2:4], byteorder='big') < 50
-            elif (msg.arbitration_id == US2):
+            #     obstacleDetected = int.from_bytes(rcvdMsg.data[2:4], byteorder='big') < 50
+            elif (rcvdMsg.arbitration_id == US2):
                 # Av Centre
-                obtacleDetected = (int.from_bytes(msg.data[4:6], byteorder='big') < 50) and (self.speed_cmd > SPEED_STOP)
+                obstacleDetected = (int.from_bytes(rcvdMsg.data[4:6], byteorder='big') < 50) and (self.speed_cmd > SPEED_STOP)
 
             if (self.enable_speed and not(obstacleDetected)):
                 self.speed_cmd |= (1 << 7)

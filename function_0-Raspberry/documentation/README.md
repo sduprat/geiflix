@@ -54,7 +54,9 @@ La version de ROS installée sur la carte SD est Kinetic Kame. Pour l'installer,
 
 L'image ainsi créée est telechargeble directement depuis le serveur du GEI [2021-05-07-raspios-buster-armhf-lite-pican2-ros_Kinetic.img.7z] (http://srv-geitp.insa-toulouse.fr/geiflix/rpi-geicar/2021-05-07-raspios-buster-armhf-lite-pican2-ros_Kinetic.img.7z) (RQ: pensez au VPN depuis chez vous)
 
-## Configuration de la raspberry en hotspot Wifi + configuration d'un serveur DHCP
+## Réseau
+
+### Configuration de la raspberry en hotspot Wifi + configuration d'un serveur DHCP
 
 Tutoriel suivi: [Creer un point d'acces Wifi (hostapd)](https://www.framboise314.fr/raspap-creez-votre-hotspot-wifi-avec-un-raspberry-pi-de-facon-express/)
 
@@ -79,3 +81,37 @@ De plus, dnsmasq fourni les plages d'adresses suivantes:
 
 - wlan0: plage DHCP : 192.168.0.50 -> 192.168.0.250
          gateway : 192.168.0.1
+
+### SSH
+
+Une fois le hotspot & DHCP configurés, on peut se connecter à la Pi en SSH. Pour cela, il faut d'abord se connecter au hotspot, puis on utilise la commande `ssh` (à activer sur Windows), suivie de l'adresse à laquelle on veut se connecter, à savoir :
+```sh
+ssh pi@192.168.0.2
+```
+On renseigne ensuite le mot de passe, et on la connexion est terminée, on accède au terminal distant.
+
+Si le DHCP & surtout le bail statique pour la Jetson ont été configurés sur `eth0`, on peut également se connecter en SSH sur la Jetson. On procède de la même façon que pour la Pi, en se connectant au hotspot et en utilisant la commande :
+```sh
+ssh admin-jetson@192.168.1.10
+```
+
+##### Perte de connexion
+
+Si la connection est perdue avec l'hôte distant (la Pi ou la Jetson), le terminal SSH ne répond plus, à `CTRL+C` ou `CTRL+D` notamment. Cela peut par exemple arriver si l'alimentation est coupée brutalement, ou lors d'un redémarrage depuis une machine distante (lorsqu'on est connecté en SSH avec `sudo reboot`). Pour éviter d'avoir à fermer & rouvrir le terminal, on peut envoyer la séquence de clôture de connexion suivante :
+`Entrée ⏎` + `~` + `.`
+Cela termine la session SSH et retourne donc au terminal depuis laquelle elle a été lancée.
+
+### Connexion au réseau WiFi IOT
+
+Pour se connecter au réseau IOT, il faut que la date/heure corresponde à peut près à la date/heure réelle. Cependant, il y a de la dérive naturellement puisque la Raspberry de synchronise pas le temps et n'a pas de RTC pour continuer à garder le temps. Lorsque l'écart devient trop important, la Pi n'arrive plus à se connecter, et il faut donc màj la date/l'heure manuellement, au moyen de la commande `date` :
+```sh
+date --set='[date]'
+```
+où `[date]` peut être renseignée dans différents formats, on peut utiliser par exemple :
+```
+10:00 17 nov
+```
+On peut ensuite redémarrer la Pi pour appliquer les changements :
+```sh
+sudo reboot
+```
