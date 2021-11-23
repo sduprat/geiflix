@@ -52,19 +52,35 @@ except OSError:
 
 # Main loop
 try:
+	obstacle=False
 	while True:
 		msg = bus.recv()
-	 
-		if msg.arbitration_id == US2 :
-			distance = int.from_bytes(msg.data[4:6], byteorder='big')
-			message = "UFC:" + str(distance)+ ";"
-			print(distance)
-			if distance > 55:
-				msg = can.Message(arbitration_id=0x010,data=[0xBA,0xBA,0x00, 0x00, 0x00, 0x00,0x00, 0x00],extended_id=False)
-				bus.send(msg)
+		if (msg.arbitration_id == US1) :
+			# ultrason avant droit
+			distance = int.from_bytes(msg.data[2:4], byteorder='big')
+			# message = "AvD:" + str(distance)+ ";"
+			# print(message)
+			if (distance > 50):
+				obstacle=False
 			else :
-				msg = can.Message(arbitration_id=0x010,data=[0x00,0x00,0x00, 0x00, 0x00, 0x00,0x00, 0x00],extended_id=False)
-				bus.send(msg)
+				obstacle=True
+
+		if (msg.arbitration_id == US2) and (obstacle==False):
+			# ultrason avant centre
+			distance = int.from_bytes(msg.data[4:6], byteorder='big')
+			# message = "AvC:" + str(distance)+ ";"
+			# print(message)
+			if distance > 50:
+				obstacle=False
+			else :
+				obstacle=True
+    
+		if obstacle==True:
+			msg = can.Message(arbitration_id=0x010,data=[0x00,0x00,0x00, 0x00, 0x00, 0x00,0x00, 0x00],extended_id=False)
+			bus.send(msg)
+		else :
+			msg = can.Message(arbitration_id=0x010,data=[0xBA,0xBA,0x00, 0x00, 0x00, 0x00,0x00, 0x00],extended_id=False)
+			bus.send(msg)
 		#count +=1
 		#time.sleep(0.1)
 		# GPIO.output(led,False)

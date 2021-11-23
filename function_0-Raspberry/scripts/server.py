@@ -136,12 +136,25 @@ class EthReceiver(Thread):
         # self.turn = 0
         # self.enable_steering = 0
         self.enable_speed = 0
-
+        
+        #obstacle variables
+        ObsArr = 0
+        ObsAv = 0
+        #wd = 0
+        
         while True :
+            
+            # Receive data from Discovery
+            #rcvdMsg = self.bus.recv()
+            
+            
             # Receive data from Jetson (eth)
             data = conn.recv(1024)
-
-            if not data: break
+            
+            if not data: 
+                print('no data')
+                
+            
 
             # Split data between header & payload
             BDist = data[0:8]
@@ -151,19 +164,8 @@ class EthReceiver(Thread):
             if BAngle: self.angle = int(BAngle)
             print("Distance : ", self.distance, " ; Angle : ", self.angle)
             
-            # Update speed cmd according to the distance
-            if (self.distance > 2100):
-                self.enable_speed = 1
-                self.speed_cmd = 60
-            elif (self.distance < 1900):
-                self.enable_speed = 1
-                self.speed_cmd = 40
-            else:
-                self.enable_speed = 0
-            # elif (header == b'ANG'):  # Angle
+            
 
-            # Receive data from Discovery
-            rcvdMsg = self.bus.recv()
 
             # Detect obstacle from US sensors
             # if (rcvdMsg.arbitration_id == US1):
@@ -185,7 +187,25 @@ class EthReceiver(Thread):
                 # Av Centre
                 obstacleDetected = (int.from_bytes(rcvdMsg.data[4:6], byteorder='big') < 50) and (self.speed_cmd > SPEED_STOP)
 
-            if (self.enable_speed and not(obstacleDetected)):
+                # Av Centre
+                ObsAv = (int.from_bytes(rcvdMsg.data[4:6], byteorder='big') < 50) #and (self.speed_cmd > SPEED_STOP)
+                print("AAAAAAAAAAAAAAAAVVVVVVVVVV ",int.from_bytes(rcvdMsg.data[4:6], byteorder='big'))
+            print('obs av :', ObsAv)
+            print('obs arr :', ObsArr)
+            '''
+                        
+            # Update speed cmd according to the distance
+            if ((self.distance > 2100) and (ObsAv == False)):
+                self.enable_speed = 1
+                self.speed_cmd = 60
+            elif ((self.distance < 1900) and (ObsArr == False)):
+                self.enable_speed = 1
+                self.speed_cmd = 40
+            else:
+                self.enable_speed = 0
+            # elif (header == b'ANG'):  # Angle
+                        
+            if (self.enable_speed): #and not(obstacleDetected)):
                 self.speed_cmd |= (1 << 7)
             else:
                 self.speed_cmd &= ~(1 << 7)
@@ -195,6 +215,8 @@ class EthReceiver(Thread):
             # print(self.enable)
             # print(self.turn)
             # print(self.enable_steering)
+
+            print(self.distance)
 
             '''
             if self.enable_speed:
@@ -218,6 +240,13 @@ class EthReceiver(Thread):
             self.bus.send(sendMsg)
 
         conn.close()
+
+        stopMsg = can.Message(arbitration_id=MCM,data=[0,0,0,0,0,0,0,0],extended_id=False)
+
+        #msg = can.Message(arbitration_id=0x010,data=[0xBC,0xBC,0x00, 0x00, 0x00, 0x00,0x00, 0x00],extended_id=False)
+        #msg = can.Message(arbitration_id=MCM,data=[0xBC,0xBC,0x00, 0x00, 0x00, 0x00,0x00, 0x00],extended_id=False)
+        print(stopMsg)
+        self.bus.send(stopMsg)
 
 if __name__ == "__main__":
 
