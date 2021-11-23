@@ -240,7 +240,7 @@ import socket
 if __name__ == "__main__":
 
     print('Bring up CAN0....')
-    os.system("sudo /sbin/ip link set can0 up type can bitrate 400000")
+    os.system("sudo /sbin/ip link set can0 up type can bitrate 500000")
     time.sleep(0.1)
 
     try:
