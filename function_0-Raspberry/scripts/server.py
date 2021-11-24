@@ -6,8 +6,7 @@ import os
 import struct
 import socket
 
-#HOST = '192.168.1.10'    # Jetson IP address
-HOST = '192.168.1.2'
+HOST = '192.168.1.2'     # IP address on LAN
 PORT = 6666              # Arbitrary non-privileged port
 
 MCM = 0x010
@@ -21,232 +20,109 @@ MAX_SPEED_FW = 75
 MAX_SPEED_BW = 25
 SPEED_STOP = 50
 
-'''
-class EthSender(Thread):
-
-    def __init__(self,conn, bus):
-        Thread.__init__(self)
-        self.conn = conn
-        self.bus = bus
-
-    def run(self):
-        while True :
-            msg = self.bus.recv()
-
-            #print(msg.arbitration_id, msg.data)
-            st = ""
-
-            if msg.arbitration_id == US1:
-                # ultrason avant gauche
-                distance = int.from_bytes(msg.data[0:2], byteorder='big')
-                message = "UFL:" + str(distance) + ";"
-                size = self.conn.send(message.encode())
-                if size == 0: break
-                # ultrason avant droit
-                distance = int.from_bytes(msg.data[2:4], byteorder='big')
-                message = "UFR:" + str(distance)+ ";"
-                size = self.conn.send(message.encode())
-                if size == 0: break
-                # ultrason arriere centre
-                distance = int.from_bytes(msg.data[4:6], byteorder='big')
-                message = "URC:" + str(distance)+ ";"
-                size = self.conn.send(message.encode())
-                if size == 0: break
-            elif msg.arbitration_id == US2:
-                # ultrason arriere gauche
-                distance = int.from_bytes(msg.data[0:2], byteorder='big')
-                message = "URL:" + str(distance)+ ";"
-                size = self.conn.send(message.encode())
-                if size == 0: break
-                # ultrason arriere droit
-                distance = int.from_bytes(msg.data[2:4], byteorder='big')
-                message = "URR:" + str(distance)+ ";"
-                size = self.conn.send(message.encode())
-                if size == 0: break
-                # ultrason avant centre
-                distance = int.from_bytes(msg.data[4:6], byteorder='big')
-                message = "UFC:" + str(distance)+ ";"
-                size = self.conn.send(message.encode())
-                if size == 0: break
-            elif msg.arbitration_id == MS:
-                # position volant
-                angle = int.from_bytes(msg.data[0:2], byteorder='big')
-                message = "POS:" + str(angle)+ ";"
-                size = self.conn.send(message.encode())
-                if size == 0: break
-                # Niveau de la batterie
-                bat = int.from_bytes(msg.data[2:4], byteorder='big')
-                message = "BAT:" + str(bat)+ ";"
-                size = self.conn.send(message.encode())
-                if size == 0: break
-                # vitesse roue gauche
-                speed_left = int.from_bytes(msg.data[4:6], byteorder='big')
-                message = "SWL:" + str(speed_left)+ ";"
-                size = self.conn.send(message.encode())
-                if size == 0: break
-                # vitesse roue droite
-                # header : SWR payload : entier, *0.01rpm
-                speed_right= int.from_bytes(msg.data[6:8], byteorder='big')
-                message = "SWR:" + str(speed_right)+ ";"
-                size = self.conn.send(message.encode())
-                if size == 0: break
-            elif msg.arbitration_id == OM1:
-                # Yaw
-                yaw = struct.unpack('>f',msg.data[0:4])
-                message = "YAW:" + str(yaw[0])+ ";"
-                #st += message
-                size = self.conn.send(message.encode())
-                if size == 0: break
-                # Pitch
-                pitch = struct.unpack('>f',msg.data[4:8])
-                message = "PIT:" + str(pitch[0])+ ";"
-                #st += message
-                size = self.conn.send(message.encode())
-                if size == 0: break
-            elif msg.arbitration_id == OM2:
-                # Roll
-                roll = struct.unpack('>f',msg.data[0:4])
-                message = "ROL:" + str(roll[0])+ ";"
-                #st += message
-                size = self.conn.send(message.encode())
-                if size == 0: break
-
-            #if (st!=""):print(st)
-'''
-
 class EthReceiver(Thread):
-    def __init__(self,conn, bus):
+    def __init__(self,connSock, canBus):
         Thread.__init__(self)
-        self.conn = conn
-        self.bus  = can.interface.Bus(channel='can0', bustype='socketcan_native')
-
+        self.connSock = connSock
+        self.canBus  = can.interface.Bus(channel='can0', bustype='socketcan_native')
         self.distance = 0
         self.angle = 0
         self.speed_cmd = 0
         self.movement = 0
         self.turn = 0
         self.enable_steering = 0
-        self.enable = 0
 
     def run(self):
         self.distance = 0
         self.angle = 0
+        self.enable_speed = 0
         self.speed_cmd = 0
         # self.movement = 0
         # self.turn = 0
         # self.enable_steering = 0
-        self.enable_speed = 0
-        
-        #obstacle variables
-        ObsArr = 0
-        ObsAv = 0
-        #wd = 0
         
         while True :
             
             # Receive data from Discovery
-            #rcvdMsg = self.bus.recv()
-            
+            fromDiscov = self.canBus.recv()
             
             # Receive data from Jetson (eth)
-            data = conn.recv(1024)
+            fromJetson = self.connSock.recv(1024)
             
-            if not data: 
-                print('no data')
-                
-            
+            if not fromJetson: 
+                print('No data from Jetson')
+                break
 
-            # Split data between header & payload
-            BDist = data[0:8]
-            BAngle = data[8:16]
-            print("Raw distance : ", BDist, " ; Raw angle : ", BAngle)
-            if BDist: self.distance = int(BDist)
-            if BAngle: self.angle = int(BAngle)
+            # Split data between distance (1st 8 B) & angle (following 8 B)
+            rawDist = fromJetson[0:8]
+            rawAngle = fromJetson[8:16]
+            print("Raw distance : ", rawDist, " ; Raw angle : ", rawAngle)
+            if rawDist: self.distance = int(rawDist)
+            if rawAngle: self.angle = int(rawAngle)
             print("Distance : ", self.distance, " ; Angle : ", self.angle)
             
-            
-
-
             # Detect obstacle from US sensors
-            # if (rcvdMsg.arbitration_id == US1):
-            #     # Av Gche
-            #     obstacleDetected = int.from_bytes(rcvdMsg.data[0:2], byteorder='big') < 50
-            # elif (rcvdMsg.arbitration_id == US1):
-            #     # Av Dte
-            #     obstacleDetected = int.from_bytes(rcvdMsg.data[2:4], byteorder='big') < 50
-            if (rcvdMsg.arbitration_id == US1):
+            if (fromDiscov.arbitration_id == US1):
+                # Av Gche
+                usAvG = int.from_bytes(fromDiscov.data[0:2], byteorder='big')
+                # Av Dte
+                usAvD = int.from_bytes(fromDiscov.data[2:4], byteorder='big')
                 # Arr Centre
-                obstacleDetected = (int.from_bytes(rcvdMsg.data[4:6], byteorder='big') < 50) and (self.speed_cmd < SPEED_STOP)
-            # elif (rcvdMsg.arbitration_id == US2):
-            #     # Arr Gche
-            #     obstacleDetected = int.from_bytes(rcvdMsg.data[0:2], byteorder='big') < 50
-            # elif (rcvdMsg.arbitration_id == US2):
-            #     # Arr Dte
-            #     obstacleDetected = int.from_bytes(rcvdMsg.data[2:4], byteorder='big') < 50
-            elif (rcvdMsg.arbitration_id == US2):
+                usArrC = int.from_bytes(fromDiscov.data[4:6], byteorder='big')
+            elif (fromDiscov.arbitration_id == US2):
+                # Arr Gche
+                usArrG = int.from_bytes(fromDiscov.data[0:2], byteorder='big')
+                # Arr Dte
+                usArrD = int.from_bytes(fromDiscov.data[2:4], byteorder='big')
                 # Av Centre
-                obstacleDetected = (int.from_bytes(rcvdMsg.data[4:6], byteorder='big') < 50) and (self.speed_cmd > SPEED_STOP)
-
-                # Av Centre
-                ObsAv = (int.from_bytes(rcvdMsg.data[4:6], byteorder='big') < 50) #and (self.speed_cmd > SPEED_STOP)
-                print("AAAAAAAAAAAAAAAAVVVVVVVVVV ",int.from_bytes(rcvdMsg.data[4:6], byteorder='big'))
-            print('obs av :', ObsAv)
-            print('obs arr :', ObsArr)
-            '''
+                usAvC = int.from_bytes(fromDiscov.data[4:6], byteorder='big')
+            
+            obstacleDetected = ((self.speed_cmd > SPEED_STOP) and \
+                                        ((usAvD < 50) or (usAvG < 50) or (usAvC < 50))) or \
+                                ((self.speed_cmd < SPEED_STOP) and \
+                                        ((usArrD < 50) or (usArrG < 50) or (usArrC < 50)))
                         
             # Update speed cmd according to the distance
-            if ((self.distance > 2100) and (ObsAv == False)):
-                self.enable_speed = 1
-                self.speed_cmd = 60
-            elif ((self.distance < 1900) and (ObsArr == False)):
-                self.enable_speed = 1
-                self.speed_cmd = 40
-            else:
+            if obstacleDetected:
                 self.enable_speed = 0
-            # elif (header == b'ANG'):  # Angle
+            else:
+                if (self.distance > 2100):
+                    self.enable_speed = 1
+                    self.speed_cmd = 60
+                elif (self.distance < 1900):
+                    self.enable_speed = 1
+                    self.speed_cmd = 40
+                else:
+                    self.enable_speed = 0
                         
-            if (self.enable_speed): #and not(obstacleDetected)):
+            if (self.enable_speed):
                 self.speed_cmd |= (1 << 7)
             else:
                 self.speed_cmd &= ~(1 << 7)
 
-            print(self.speed_cmd)
-            # print(self.movement)
-            # print(self.enable)
-            # print(self.turn)
-            # print(self.enable_steering)
-
-            print(self.distance)
-
             '''
-            if self.enable_speed:
-                cmd_mv = (50 + self.movement*self.speed_cmd) | 0x80
-            else:
-                cmd_mv = (50 + self.movement*self.speed_cmd) & ~0x80
+                if self.enable_speed:
+                    cmd_mv = (50 + self.movement*self.speed_cmd) | 0x80
+                else:
+                    cmd_mv = (50 + self.movement*self.speed_cmd) & ~0x80
 
-            if self.enable_steering:
-                cmd_turn = 50 + self.turn*30 | 0x80
-            else:
-                cmd_turn = 50 + self.turn*30 & 0x80
+                if self.enable_steering:
+                    cmd_turn = 50 + self.turn*30 | 0x80
+                else:
+                    cmd_turn = 50 + self.turn*30 & 0x80
 
-            print("mv:",cmd_mv,"turn:",cmd_turn)
+                print("mv:",cmd_mv,"turn:",cmd_turn)
             '''
 
-            sendMsg = can.Message(arbitration_id=MCM,data=[self.speed_cmd, self.speed_cmd, 0,0,0,0,0,0],extended_id=False)
+            toNucleo = can.Message(arbitration_id=MCM,data=[self.speed_cmd, self.speed_cmd, 0,0,0,0,0,0],extended_id=False)
+            self.canBus.send(toNucleo)
 
-            #msg = can.Message(arbitration_id=0x010,data=[0xBC,0xBC,0x00, 0x00, 0x00, 0x00,0x00, 0x00],extended_id=False)
-            #msg = can.Message(arbitration_id=MCM,data=[0xBC,0xBC,0x00, 0x00, 0x00, 0x00,0x00, 0x00],extended_id=False)
-            print(sendMsg)
-            self.bus.send(sendMsg)
+        print("Connexion perdue")
 
-        conn.close()
+        stopNucleo = can.Message(arbitration_id=MCM,data=[0,0,0,0,0,0,0,0],extended_id=False)
+        self.canBus.send(stopNucleo)
 
-        stopMsg = can.Message(arbitration_id=MCM,data=[0,0,0,0,0,0,0,0],extended_id=False)
-
-        #msg = can.Message(arbitration_id=0x010,data=[0xBC,0xBC,0x00, 0x00, 0x00, 0x00,0x00, 0x00],extended_id=False)
-        #msg = can.Message(arbitration_id=MCM,data=[0xBC,0xBC,0x00, 0x00, 0x00, 0x00,0x00, 0x00],extended_id=False)
-        print(stopMsg)
-        self.bus.send(stopMsg)
+        self.connSock.close()
 
 if __name__ == "__main__":
 
@@ -255,22 +131,18 @@ if __name__ == "__main__":
     time.sleep(0.1)
 
     try:
-        bus = can.interface.Bus(channel='can0', bustype='socketcan_native')
+        canBus = can.interface.Bus(channel='can0', bustype='socketcan_native')
     except OSError:
         print('Cannot find PiCAN board.')
         exit()
 
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind((HOST, PORT))
-    s.listen(1)
-    (conn, addr) = s.accept()
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.bind((HOST, PORT))
+    sock.listen(1)
+    (connSock, addr) = sock.accept()
     print('Connected by ', addr)
 
 
-    recvThread = EthReceiver(conn, bus)
+    recvThread = EthReceiver(connSock, canBus)
     recvThread.start()
-    # sendThread = EthSender(conn, bus)
-    # sendThread.start()
-
     recvThread.join()
-    # sendThread.join()
