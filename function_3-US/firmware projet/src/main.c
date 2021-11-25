@@ -297,6 +297,12 @@ int main(void)
 				BSP_LED_Off(LED_ORANGE);
 			}
 
+			if(US_AV_G_mes<50){				//test ultrasons avant gauche
+				BSP_LED_On(LED_GREEN);		//s'allume si objet en dessous de 50cm
+			}else{
+				BSP_LED_Off(LED_GREEN);
+			}
+
             // TODO: Revoir le delai de 1 seconde
             // HAL_Delay(100000);
         }
