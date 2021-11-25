@@ -13,7 +13,7 @@ UDP_IP = "192.168.1.102"
 UDP_PORT = 6699
 # LIDAR
 bufferSize = 1248
-tab_distance = [[255 for azimuth in range(361)] * channel for channel in range(17)]
+tab_distance = [[255 for azimuth in range(36001)] * channel for channel in range(17)]
 new_azimuth = 0; old_azimuth = 0; missing_azimuth = 0
 nb_nearby_objects = 0
 object_detected = 0
@@ -41,7 +41,7 @@ while True:
         # Azimuth
         offset_azimuth = (44+100*(data_block-1))*2 # Start at 44, then 144, 244, 344...
         azimuth = data_hex[offset_azimuth]+data_hex[offset_azimuth+1]+data_hex[offset_azimuth+2]+data_hex[offset_azimuth+3]
-        azimuth = int(azimuth, 16)//100
+        azimuth = int(azimuth, 16)
 
         for channel in range(1, 17): # We can go to 33 but not yet  
             # Distance (/100 for meters, /2 for one-way distance)
@@ -56,6 +56,9 @@ while True:
             # Check if distance is OK, 0.2m min and 150m max
             if distance > 0.2 and distance < 150.0 :
                 tab_distance[channel][azimuth] = distance
+
+        print(f"Azimuth : {azimuth}")
+
 
         #         # Perform interpolation
         #         new_azimuth = azimuth
@@ -76,16 +79,16 @@ while True:
         # print(f"For channel {16}, azimuth {azimuth}, distance = {tab_distance[16][azimuth]}")
         
     # Detection of nearby objects
-    for azimuth in range(361):
-        if tab_distance[16][azimuth] < 0.5 :
-            nb_nearby_objects += 1
+    # for azimuth in range(361):
+    #     if tab_distance[16][azimuth] < 0.5 :
+    #         nb_nearby_objects += 1
 
-    if nb_nearby_objects == 0 and object_detected == 1:
-        print("Nearby Object Gone !")
-        object_detected = 0
+    # if nb_nearby_objects == 0 and object_detected == 1:
+    #     print("Nearby Object Gone !")
+    #     object_detected = 0
 
-    if nb_nearby_objects > 0 and object_detected == 0:
-        print("Nearby Object Detected !")
-        object_detected = 1
+    # if nb_nearby_objects > 0 and object_detected == 0:
+    #     print("Nearby Object Detected !")
+    #     object_detected = 1
 
-    nb_nearby_objects = 0
+    # nb_nearby_objects = 0
