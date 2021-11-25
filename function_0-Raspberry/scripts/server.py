@@ -65,12 +65,12 @@ class EthReceiver(Thread):
             # Update speed cmd according to the distance
             self.enable_speed = True
             erreur = self.distance - 2000
-            if (erreur<-2000):
+            if (erreur < -2000):
                 self.speed_cmd = 25
             elif (erreur > 2000):
                 self.speed_cmd = 75
             else:
-                self.speed_cmd = 0.0125*erreur + 50
+                self.speed_cmd = int(0.0125*erreur + 50)
 
             
             # Get US sensors values
