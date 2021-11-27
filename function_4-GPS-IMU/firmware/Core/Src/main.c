@@ -54,6 +54,10 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 
+extern CAN_HandleTypeDef     hcan;
+
+int SEND_CAN = 1;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -131,11 +135,18 @@ int main(void)
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
 	uint8_t data[8]={1,2,3,4,5,6,7,8};
+
 	while (1)
 	{
 		/* USER CODE END WHILE */
-		CAN_Send(data, 0x201);
+
 		/* USER CODE BEGIN 3 */
+		// Envoi des mesures
+		//if (SEND_CAN){
+		    //SEND_CAN = 0;
+		    CAN_Send(data, 0x201);
+		//}
+
 		//HAL_Delay(1000);
 		//printf ("coucou\n");
 	}

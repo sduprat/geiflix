@@ -42,7 +42,7 @@ extern "C" {
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
-
+#define PERIOD_SEND_MES 100 // Period in ms to send data
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
