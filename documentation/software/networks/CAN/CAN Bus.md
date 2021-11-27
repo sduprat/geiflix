@@ -223,7 +223,7 @@ sudo /sbin/ip link set can0 up type can bitrate 400000
 		* DISABLED 	: 0x00
 		* STOP 		: 0x32 //Arret
 		* REVERSE 	: 0x28 //Marche arriere
-		* WALK 		: 0x37 //Premiere
+		* WALK 		: 0x3C //Premiere 
 		* JOG 		: 0x41 //Seconde
 		* RUN 		: 0x4B //Troisieme
 
