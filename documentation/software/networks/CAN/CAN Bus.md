@@ -65,12 +65,12 @@ sudo /sbin/ip link set can0 up type can bitrate 400000
 
 * **From:** Raspeberry
 * **To:** Nucleo
-* **Lenght (Bytes):** 3
+* **Lenght (Bytes):** 4
 * **Data field:**
 
-|Byte 0 |Byte 1 | Byte 2|
-|:------|:------|:------|
-|PWMG_cons | PWMGD_cons | PWMAV_cons |
+|Byte 0 |Byte 1 | Byte 2| Byte 3|
+|:------|:------|:------|:------|
+|PWMG_cons | PWMGD_cons | PWMAV_cons | POSAV_cons |
 
 * **PWMG\_cons: Left motor command**
 	* Bit 7: Enable bit.
@@ -101,6 +101,17 @@ sudo /sbin/ip link set can0 up type can bitrate 400000
 		* 1: motor enable
 	* Bits 6-0: command bits.
 		This bit-field is used to control the steering  motor. The value 0 turns the wheel to the left with the maximum speed. The value 50 stops the motor. The value 100 turns the wheel to the right with the maximum speed.
+		* value between 0 and 100.
+
+		_Note:_ To avoid power problem, the PWM that controls the motor is limited to 40%.
+
+* **POSAV\_cons: Steering wheel motor command (in position)**
+	* Bit 7: Enable bit.
+		This bit is used to deactivate the steering motor drivers in order to avoid power consumption and save batteries.
+		* 0: motor disable
+		* 1: motor enable
+	* Bits 6-0: command bits.
+		This bit-field is used to control the steering motor. The value 0 corresponds to the wheels maximum angle to the left. The value 50 stops the motor. The value 100 corresponds to the wheels maximum angle to the right.
 		* value between 0 and 100.
 
 		_Note:_ To avoid power problem, the PWM that controls the motor is limited to 40%.
@@ -192,6 +203,46 @@ sudo /sbin/ip link set can0 up type can bitrate 400000
 * **Roll: Roll Angle**
 	* bits 31-0: value in float of the roll angle in degree.
 
+### Speed & Steering Commands (SSC)
+
+* **From:** Raspeberry
+* **To:** NucleoF103
+* **Lenght (Bytes):** 2
+* **Data field:**
+
+* The SSC mode allows a differential between left and right wheels for more effective turns.
+
+|Byte 0 |Byte 1 |
+|:------|:------|
+|SpeedMode | SteerMode |
+
+* **SpeedMode: requested speed mode**
+	* Bit 7-0: Command bits.
+		This bit-field is used to control the speed of the car. The value must be between 0 and 100. 
+		The available modes are: 
+		* DISABLED 	: 0x00
+		* STOP 		: 0x32 //Arret
+		* REVERSE 	: 0x28 //Marche arriere
+		* WALK 		: 0x3C //Premiere 
+		* JOG 		: 0x41 //Seconde
+		* RUN 		: 0x4B //Troisieme
+
+		_Note:_ To avoid power problem, the motor's PWM is limited by software.
+
+* **SteerMode: requested steering mode**
+	* Bits 7-0: Command bits.
+		This bit-field is used to control the steering of the car. The value must be between 0 and 100.The value 0 would be the maximum angle to the left. The value 50 would be going straight forward. The value 100 is the maximum angle to the right.
+		The available modes are : 
+		* DISABLED 	: 0x00
+		* STRAIGHT 	: 0x32 //Roues droites
+		* HARD_L	: 0x0A //Hard turn to the left
+		* MODT_L	: 0x19 //Moderate turn to the left
+		* SOFT_L	: 0x28 //Soft turn to the left
+		* HARD_R	: 0x5A //Hard turn to the right
+		* MODT_R	: 0x4B //Moderate turn to the right
+		* SOFT_R	: 0x3C //soft turn to the right
+
+		_Note:_ The maximum turning radius to the left and right are limited by mechanic.
 
 
 ## IDs of the CAN Messages
@@ -205,3 +256,4 @@ sudo /sbin/ip link set can0 up type can bitrate 400000
 |Ultrasonic Sensors 2 (US2)  |0x0      |0x0        |0x1      |0x001 |
 |Orientation Measures 1 (OM1)|0x1      |0x0        |0x1      |0x101 |
 |Orientation Measures 2 (OM2)|0x1      |0x0        |0x2      |0x102 |
+|Speed&Steering Command (SSC)|0x0      |0x2        |0x0      |0x020 |
