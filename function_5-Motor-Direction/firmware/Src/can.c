@@ -45,10 +45,13 @@
 /* USER CODE BEGIN 0 */
 
 extern int cmdLRM, cmdRRM, cmdSFM, cmdPOS;
+extern int AVG;
 extern GPIO_PinState en_MARG, en_MARD, en_MAV, en_POS;
 
 extern int modeSpeed;
 extern int modeSteer;
+
+int obstacle = 0;
 
 /* USER CODE END 0 */
 
@@ -196,6 +199,14 @@ int read_cmd(uint8_t data, GPIO_PinState *en_M)
 	return (int)VMdata;
 }
 
+int read_us(uint8_t data)
+{
+	uint8_t VMdata;
+
+	VMdata = data & 0x7F;
+	return (int)VMdata;
+}
+
 int read_mode(uint8_t data) //En soit cette fonction ne sert a rien parce qu'on pourrait simplement recuperer la data en la typecastant int
 {
 	uint8_t VMdata;
@@ -210,17 +221,38 @@ void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan)
 	/* Consigne vitesse moteur */
 	if(hcan->pRxMsg->StdId == CAN_ID_CMC)
 	{
-		cmdLRM = read_cmd(hcan->pRxMsg->Data[0], &en_MARG);
-		cmdRRM = read_cmd(hcan->pRxMsg->Data[1], &en_MARD);
-		cmdSFM = read_cmd(hcan->pRxMsg->Data[2], &en_MAV);
-		cmdPOS = read_cmd(hcan->pRxMsg->Data[3], &en_POS);
+		if(obstacle==0){
+			cmdLRM = read_cmd(hcan->pRxMsg->Data[0], &en_MARG);
+			cmdRRM = read_cmd(hcan->pRxMsg->Data[1], &en_MARD);
+			cmdSFM = read_cmd(hcan->pRxMsg->Data[2], &en_MAV);
+			cmdPOS = read_cmd(hcan->pRxMsg->Data[3], &en_POS);
+
+		}
+
 	}
 
 	/* Consigne vitesse et direction */
 	if(hcan->pRxMsg->StdId == CAN_ID_SSC)
 	{
-		modeSpeed = read_mode(hcan->pRxMsg->Data[0]);
-		modeSteer = read_mode(hcan->pRxMsg->Data[1]);
+		if(obstacle==0){
+			modeSpeed = read_mode(hcan->pRxMsg->Data[0]);
+			modeSteer = read_mode(hcan->pRxMsg->Data[1]);
+		}
+
+
+
+	}
+	//consigne ultrasons
+	if(hcan->pRxMsg->StdId == CAN_ID_US2)
+	{
+		AVG = read_us(hcan->pRxMsg->Data[5]);
+		if(AVG<50){
+			obstacle = 1;
+			modeSpeed = 00;
+			modeSteer= 00;
+		}else{
+			obstacle=0;
+		}
 	}
 		
 	__HAL_CAN_ENABLE_IT(hcan, CAN_IT_FMP0);

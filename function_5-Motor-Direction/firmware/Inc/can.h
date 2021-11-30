@@ -57,6 +57,8 @@ extern CAN_HandleTypeDef hcan;
 #define CAN_ID_CMC 	0x010 	// Control Motor Command
 #define CAN_ID_MS	0x100	// Motor Sensor
 #define CAN_ID_SSC 	0x020	// Speed and Steering Command
+#define CAN_ID_US1	0x000	// Ultrasound 1
+#define CAN_ID_US2	0x001	// Ultrasound 2
 
 /* USER CODE END Private defines */
 

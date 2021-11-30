@@ -33,8 +33,8 @@
 #define TOLERANCE_ANGLE 	3
 #define VAL_WHEN_STRAIGHT 	-50
 #define VAL_WHEN_RIGHT		100
-#define CAPT_WHEN_STRAIGHT 	560  // Klunk 485  | YDP 650
-#define CAPT_WHEN_RIGHT		1760 // Klunk 1745 | YDP 1350
+#define CAPT_WHEN_STRAIGHT 	642 // Klunk 485  | YDP 650
+#define CAPT_WHEN_RIGHT		1272 // Klunk 1745 | YDP 1350
 
 /* Private variables ---------------------------------------------------------*/
 
