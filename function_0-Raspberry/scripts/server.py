@@ -5,11 +5,13 @@ import can
 import os
 import struct
 import socket
+from math import tan,pi
 
 HOST = '192.168.1.2'     # IP address on LAN
 PORT = 6666              # Arbitrary non-privileged port
 
-MCM = 0x010
+CMC = 0x010
+SSC = 0x020
 MS = 0x100
 US1 = 0x000
 US2 = 0x001
@@ -20,6 +22,9 @@ MAX_SPEED_FW = 75
 MAX_SPEED_BW = 25
 SPEED_STOP = 50
 
+CAR_LENGTH = 60
+CAR_WIDTH = 40
+
 class EthReceiver(Thread):
     def __init__(self,connSock, canBus):
         Thread.__init__(self)
@@ -28,18 +33,18 @@ class EthReceiver(Thread):
         self.distance = 0
         self.angle = 0
         self.speed_cmd = 0
-        self.movement = 0
-        self.turn = 0
-        self.enable_steering = 0
+        self.speed_left = 0
+        self.speed_right = 0
+        self.steering = 0
 
     def run(self):
         self.distance = 0
         self.angle = 0
         self.enable_speed = 0
         self.speed_cmd = 0
-        # self.movement = 0
-        # self.turn = 0
-        # self.enable_steering = 0
+        self.speed_left = 0
+        self.speed_right = 0
+        self.steering = 0
         usAvG,usAvD,usArrC,usArrG,usArrD,usAvC = 0,0,0,0,0,0
         
         while True :
@@ -66,35 +71,35 @@ class EthReceiver(Thread):
             self.enable_speed = True
             erreur = self.distance - 2000
             if (erreur < -2000):
-                self.speed_cmd = 25
+                self.speed_cmd = -25
             elif (erreur > 2000):
-                self.speed_cmd = 75
+                self.speed_cmd = 25
             else:
-                self.speed_cmd = int(0.0125*erreur + 50)
+                self.speed_cmd = int(0.0125*erreur)
 
             
-            # Get US sensors values
-            if (fromDiscov.arbitration_id == US1):
-                # Av Gche
-                usAvG = int.from_bytes(fromDiscov.data[0:2], byteorder='big')
-                # Av Dte
-                usAvD = int.from_bytes(fromDiscov.data[2:4], byteorder='big')
-                # Arr Centre
-                usArrC = int.from_bytes(fromDiscov.data[4:6], byteorder='big')
-            elif (fromDiscov.arbitration_id == US2):
-                # Arr Gche
-                usArrG = int.from_bytes(fromDiscov.data[0:2], byteorder='big')
-                # Arr Dte
-                usArrD = int.from_bytes(fromDiscov.data[2:4], byteorder='big')
-                # Av Centre
-                usAvC = int.from_bytes(fromDiscov.data[4:6], byteorder='big')
-            
-            # Determine obstacle presence given direction (FW/BW) & US values
-            obstacleDetected = ((self.speed_cmd > SPEED_STOP) and \
-                                        ((usAvD < 50) or (usAvG < 50) or (usAvC < 50))) or \
-                                ((self.speed_cmd < SPEED_STOP) and \
-                                        ((usArrD < 50) or (usArrG < 50) or (usArrC < 50)))
-            self.enable_speed &= not obstacleDetected
+            # # Get US sensors values
+            # if (fromDiscov.arbitration_id == US1):
+            #     # Av Gche
+            #     usAvG = int.from_bytes(fromDiscov.data[0:2], byteorder='big')
+            #     # Av Dte
+            #     usAvD = int.from_bytes(fromDiscov.data[2:4], byteorder='big')
+            #     # Arr Centre
+            #     usArrC = int.from_bytes(fromDiscov.data[4:6], byteorder='big')
+            # elif (fromDiscov.arbitration_id == US2):
+            #     # Arr Gche
+            #     usArrG = int.from_bytes(fromDiscov.data[0:2], byteorder='big')
+            #     # Arr Dte
+            #     usArrD = int.from_bytes(fromDiscov.data[2:4], byteorder='big')
+            #     # Av Centre
+            #     usAvC = int.from_bytes(fromDiscov.data[4:6], byteorder='big')
+            # 
+            # # Determine obstacle presence given direction (FW/BW) & US values
+            # obstacleDetected = ((self.speed_cmd > SPEED_STOP) and \
+            #                             ((usAvD < 50) or (usAvG < 50) or (usAvC < 50))) or \
+            #                     ((self.speed_cmd < SPEED_STOP) and \
+            #                             ((usArrD < 50) or (usArrG < 50) or (usArrC < 50)))
+            # self.enable_speed &= not obstacleDetected
                         
             # Enable or not speed in motor command
             if (self.enable_speed):
@@ -102,27 +107,25 @@ class EthReceiver(Thread):
             else:
                 self.speed_cmd &= ~(1 << 7)
 
-            '''
-                if self.enable_speed:
-                    cmd_mv = (50 + self.movement*self.speed_cmd) | 0x80
-                else:
-                    cmd_mv = (50 + self.movement*self.speed_cmd) & ~0x80
+            # Compute differential speed for motors
+            self.speed_left = ((CAR_LENGTH + CAR_WIDTH * tan(2*pi*(self.angle/360)))/CAR_LENGTH) * self.speed_cmd + 50
+            self.speed_left = ((CAR_LENGTH - CAR_WIDTH * tan(2*pi*(self.angle/360)))/CAR_LENGTH) * self.speed_cmd + 50
 
-                if self.enable_steering:
-                    cmd_turn = 50 + self.turn*30 | 0x80
-                else:
-                    cmd_turn = 50 + self.turn*30 & 0x80
+            # Compute the steering from the angle
+            if self.angle < -25:
+                self.steering = 0
+            elif self.angle > 25:
+                self.steering = 100
+            else:
+                self.steering = 2*(self.angle+25)
 
-                print("mv:",cmd_mv,"turn:",cmd_turn)
-            '''
-            
             # Compose & send CAN message to Nucleo
-            toNucleo = can.Message(arbitration_id=MCM,data=[self.speed_cmd, self.speed_cmd, 0,0,0,0,0,0],extended_id=False)
+            toNucleo = can.Message(arbitration_id=SSC,data=[self.speed_left, self.speed_right,0,self.steering],extended_id=False)
             self.canBus.send(toNucleo)
 
         print("Connexion perdue")
 
-        stopNucleo = can.Message(arbitration_id=MCM,data=[0,0,0,0,0,0,0,0],extended_id=False)
+        stopNucleo = can.Message(arbitration_id=CMC,data=[0,0,0,0,0,0,0,0],extended_id=False)
         self.canBus.send(stopNucleo)
 
         self.connSock.close()

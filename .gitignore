@@ -96,6 +96,7 @@ __pycache__/
 
 # IDE-related folders
 .vscode
+.vs
 
 # CMake files & folders
 CMakeLists.txt.user
