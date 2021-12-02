@@ -45,13 +45,14 @@
 /* USER CODE BEGIN 0 */
 
 extern int cmdLRM, cmdRRM, cmdSFM, cmdPOS;
-extern int AVG;
+extern int AVC, AVG, AVD, ARC, ARD, ARG;
 extern GPIO_PinState en_MARG, en_MARD, en_MAV, en_POS;
 
 extern int modeSpeed;
 extern int modeSteer;
 
-int obstacle = 0;
+int obstacle = 0;		//variable permettant de savoir si un obstacle est détecté
+int tmpSpeed, tmpSteer, testAvant;
 
 /* USER CODE END 0 */
 
@@ -215,6 +216,17 @@ int read_mode(uint8_t data) //En soit cette fonction ne sert a rien parce qu'on 
 	return (int)VMdata;
 }
 
+void stop_voiture(){			//met toutes les commandes moteur au point d'arrêt
+	en_MARG = GPIO_PIN_SET;
+	en_MARD = GPIO_PIN_SET;
+	en_MAV = GPIO_PIN_SET;
+	en_POS = GPIO_PIN_SET;
+	cmdLRM = 50;
+	cmdRRM = 50;
+	cmdSFM = 50;
+	cmdPOS = 50;
+}
+
 void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan)
 {
 	
@@ -245,15 +257,42 @@ void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan)
 	//consigne ultrasons
 	if(hcan->pRxMsg->StdId == CAN_ID_US2)
 	{
-		AVG = read_us(hcan->pRxMsg->Data[5]);
-		if(AVG<50){
+		AVC = read_us(hcan->pRxMsg->Data[5]);
+		ARG = read_us(hcan->pRxMsg->Data[1]);
+		ARD = read_us(hcan->pRxMsg->Data[3]);
+		if((AVC<50) && (cmdLRM>=50)){			//si obstacle détecte sur Avant Centre et la voiture avance
 			obstacle = 1;
+
+			/*tmpSpeed = modeSpeed;   //mode 2
+			tmpSteer = modeSteer;
 			modeSpeed = 00;
-			modeSteer= 00;
+			modeSteer= 00;*/
+
+			stop_voiture();
+
 		}else{
 			obstacle=0;
+			/*modeSpeed = tmpSpeed ;
+			modeSteer = tmpSteer ;*/
+
 		}
 	}
+
+	if(hcan->pRxMsg->StdId == CAN_ID_US1)
+		{
+			AVG = read_us(hcan->pRxMsg->Data[1]);
+			AVD = read_us(hcan->pRxMsg->Data[3]);
+			ARC = read_us(hcan->pRxMsg->Data[5]);
+			if(ARC<50 && cmdLRM<=50){					//si obstacle détecte sur Arrière Centre et la voiture recule
+				obstacle = 1;
+				stop_voiture();
+			}else if ((AVG<50 || AVD<50) && cmdLRM>=50){	//si obstacle détecte sur Avant Gauche/droite et la voiture avance
+				obstacle=1;
+				stop_voiture();
+			}else{
+				obstacle=0;
+			}
+		}
 		
 	__HAL_CAN_ENABLE_IT(hcan, CAN_IT_FMP0);
 }

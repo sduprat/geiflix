@@ -56,7 +56,7 @@
  * 1- Trames 0x010 (CMC)
  * 2- Trames 0x020 (SSC)
  */
-#define MODE 2
+#define MODE 1
 
 /* USER CODE END Includes */
 
@@ -77,7 +77,7 @@ int SEND_CAN = 1;
 uint32_t ADCBUF[5];
 
 int cmdLRM = 50, cmdRRM = 50, cmdSFM = 50, cmdPOS = 50; // 0 � 100 Moteur gauche, droit, avant, angle avant
-int AVG = 0; //ultrasons
+int AVC = 0, AVG = 0, AVD = 0, ARC = 0, ARG = 0, ARD = 0; //ultrasons
 
 uint32_t VMG_mes = 0, VMD_mes = 0, per_vitesseG = 0, per_vitesseD = 0;
 
