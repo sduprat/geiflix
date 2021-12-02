@@ -63,8 +63,8 @@ class EthReceiver(Thread):
             # Split data between distance (1st 8 B) & angle (following 8 B)
             rawDist = fromJetson[0:8]
             rawAngle = fromJetson[8:16]
-            if rawDist: self.distance = int(rawDist)
-            if rawAngle: self.angle = int(rawAngle)
+            if rawDist: self.distance = int.from_bytes(rawDist,'big')
+            if rawAngle: self.angle = int.from_bytes(rawAngle,'big')
             print("d : ", self.distance, " ; a : ", self.angle)
 
             # Update speed cmd according to the distance
