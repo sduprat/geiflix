@@ -60,11 +60,12 @@ class EthReceiver(Thread):
                 print('No data from Jetson')
                 break
 
-            # Split data between distance (1st 8 B) & angle (following 8 B)
-            rawDist = fromJetson[0:8]
-            rawAngle = fromJetson[8:16]
-            if rawDist: self.distance = int.from_bytes(rawDist,'big')
-            if rawAngle: self.angle = int.from_bytes(rawAngle,'big')
+            # Split data between distance (before ':') & angle (after ':')
+            fromJetson = fromJetson.decode('utf-8').split(":")
+            rawDist = fromJetson[0]
+            rawAngle = fromJetson[1]
+            if rawDist: self.distance = int(rawDist)
+            if rawAngle: self.angle = int(rawAngle)
             print("d : ", self.distance, " ; a : ", self.angle)
 
             # Update speed cmd according to the distance
@@ -109,7 +110,7 @@ class EthReceiver(Thread):
 
             # Compute differential speed for motors
             self.speed_left = ((CAR_LENGTH + CAR_WIDTH * tan(2*pi*(self.angle/360)))/CAR_LENGTH) * self.speed_cmd + 50
-            self.speed_left = ((CAR_LENGTH - CAR_WIDTH * tan(2*pi*(self.angle/360)))/CAR_LENGTH) * self.speed_cmd + 50
+            self.speed_right = ((CAR_LENGTH - CAR_WIDTH * tan(2*pi*(self.angle/360)))/CAR_LENGTH) * self.speed_cmd + 50
 
             # Compute the steering from the angle
             if self.angle < -25:
