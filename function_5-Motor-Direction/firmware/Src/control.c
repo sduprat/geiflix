@@ -27,7 +27,7 @@
 //Definition des modes de vitesse :: SPEED MODES
 #define STOP 		50
 #define REVERSE 	40
-#define WALK 		55
+#define WALK 		58
 #define JOG 		65
 #define RUN 		75
 
@@ -44,7 +44,7 @@
 #define DIFF_NONE 	0
 #define DIFF_SMALL 	5
 #define DIFF_MEDIUM 10
-#define DIFF_LARGE 	20
+#define DIFF_LARGE 	15
 
 //Definition des types d'azimut
 #define AZIMUT_FORWARD 	0
