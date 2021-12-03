@@ -68,11 +68,6 @@ void MX_USART2_UART_Init(void)
 
 }
 
-void usart_send_message(uint8_t * mes, uint16_t size) {
-	 HAL_UART_Transmit_DMA(&huart2, mes, size);
-}
-
-
 void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
 {
 

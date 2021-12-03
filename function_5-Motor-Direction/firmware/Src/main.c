@@ -46,11 +46,19 @@
 #include "usart.h"
 #include "gpio.h"
 #include "power.h"
-#include "control_direction.h"
-
-
+#include "control.h"
+#include "calibrate.h"
 
 /* USER CODE BEGIN Includes */
+
+/* Ici, définir le mode de fonctionnement du code
+ * 0- Calibration
+ * 1- Trames 0x010 (CMC)
+ * 2- Trames 0x020 (SSC)
+ * 3- Trames 0x030 (GPS)
+ */
+
+#define MODE 2
 
 /* USER CODE END Includes */
 
@@ -58,8 +66,8 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-int UPDATE_CMD_FLAG = 0;
-int SEND_CAN = 0;
+int UPDATE_CMD_FLAG = 1;
+int SEND_CAN = 1;
 
 /* Tous ADC sur 12 bits pleine echelle 3.3V
  ADCBUF[0] mesure batterie
@@ -72,28 +80,17 @@ uint32_t ADCBUF[5];
 
 int cmdLRM = 50, cmdRRM = 50, cmdSFM = 50, cmdPOS = 50; // 0 � 100 Moteur gauche, droit, avant, angle avant
 
-// 0xB2 = enable moteur + moteur à l'arret
-// 0x80 = enable moteur + a fond a droite
-// 0xE4 = enable moteur + a fond a gauche
-
-int valcaptr = 0;
-
 uint32_t VMG_mes = 0, VMD_mes = 0, per_vitesseG = 0, per_vitesseD = 0;
 
-/* GPS coordinates if GPS not connected */
-float lat1 = 1.0;
-float lat2 = 1.0;
-float lon1 = 1.0;
-float lon2 = 1.0;
-
-/* 				Enable Moteurs 				*/
-/* 	GPIO_PIN_SET : activation   */
+/* Enable Moteurs 				*/
+/* GPIO_PIN_SET : activation    */
 /* GPIO_PIN_RESET : pont ouvert */
 GPIO_PinState en_MARG = GPIO_PIN_RESET;
 GPIO_PinState en_MARD = GPIO_PIN_RESET;
 GPIO_PinState en_MAV = GPIO_PIN_RESET;
 GPIO_PinState en_POS = GPIO_PIN_RESET;
-/*********************************Informations rotation volant********************************/
+
+/********************************Informations rotation volant********************************/
 /* mesure angulaire potentiometre amplitudes volant +/- 17 % environ autour du centre        */
 /* PWM = 0.5 (50) % arret, PWM = 0.4 tourne gauche, PWM = 0.6 tourne droite                  */ 
 
@@ -101,9 +98,25 @@ CanTxMsgTypeDef TxMessage;
 CanRxMsgTypeDef RxMessage;
 uint8_t data[8] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
 
+int modeSpeed = 0;
+int modeSteer = 0;
+
+double latDeg;
+double latMin;
+double latSec;
+double lonDeg;
+double lonMin;
+double lonSec;
+
+double carLatitude = 0;
+double carLongitude = 0;
+
+double joinLatitude = 0;
+double joinLongitude = 0;
+
+double alpha = 0;
+
 extern CAN_HandleTypeDef hcan;
-
-
 
 /* USER CODE END PV */
 
@@ -125,14 +138,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
     }
 }
 
-
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
     /***               Mesures des vitesses moteurs                      ***
      * F�quences entr�es micro, sorties capteurs, entre environ 2hz � 80 hz *
-     * Timer 2,4 sur 16 bits (65535)cp ->compte p�riode 9999 pour 1s (1Hz)  *
-     *                               ->compte p�riode 1000 pour 0.1s (10Hz) *
-     * Rapport r�duction 2279/64 ~ 36 impulsions/tour de roue               *
+     * Timer 2,4 sur 16 bits (65535)cp ->compte p�riode 9999 pour 1s (1Hz)   *
+     *                               ->compte p�riode 1000 pour 0.1s (10Hz)  *
+     * Rapport r�duction 2279/64 ~ 36 impulsions/tour de roue                *
      * unite de 0.01*tr/mn = 168495/ cp                                     *
      */
     if (htim->Instance==TIM2)
@@ -150,8 +162,6 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
         __HAL_TIM_SET_COUNTER(&htim4,0);// mise a zero compteur apres capture
     }
 }
-
-
 
 /* USER CODE END 0 */
 
@@ -198,11 +208,6 @@ int main(void)
     
     /* Initialisations */
     
-    /*gestion systic 1Khz*/
-    
-    //uint32_t usTicks = HAL_RCC_GetSysClockFreq() / 1000;
-    // HAL_SYSTICK_Config(usTicks);
-    
     /* PWM MOTEURS */
     HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
     HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
@@ -221,17 +226,14 @@ int main(void)
     /* ADC1 */
     HAL_ADC_Start_DMA (&hadc1,ADCBUF,5);
     
-    /* CAN */
-    CAN_FilterConfig();
-    __HAL_CAN_ENABLE_IT(&hcan, CAN_IT_FMP0);
     /* USER CODE END 2 */
     
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
     
     /* Initialisation Steering */
-    steering_Init();
-    
+    //steering_Init();
+
     while (1)
     {
         /* USER CODE END WHILE */
@@ -241,42 +243,30 @@ int main(void)
         /* Update motors command*/
         if (UPDATE_CMD_FLAG){
             UPDATE_CMD_FLAG = 0;
+            
+			#if (MODE == 0)
+            	calibrate();
+			#elif (MODE == 1)
+            	wheels_set_speed(en_MARD, en_MARG, cmdRRM, cmdLRM);
 
-
-            en_MARD = GPIO_PIN_SET;
-            en_MARG = GPIO_PIN_SET;
-        	wheels_set_speed(en_MARD, en_MARG, 50, 50);
-
-        	en_POS = GPIO_PIN_SET;
-            steering_set_position(en_POS, 50);
-
-            //wheels_set_speed(en_MARD, en_MARG, 60, 60);
-        	/*
-        	distance = get_distance(lat1, lon1, lat2, lon2);
-
-        	movement_without_GPS(distance);
-			*/
-
-            /*
-
-            en_POS = GPIO_PIN_SET;
-            steering_set_position(en_POS, 0x32); // remise au milieu
-
-            cmdPOS = 0x50; //A fond à droite
-
-            // Assure la non-contradiction des commandes moteurs
-            if ((en_MAV == GPIO_PIN_SET) && (en_POS == GPIO_PIN_SET))
-            {
-                en_MAV = GPIO_PIN_RESET;
-            }
-
-             if (!steering_is_a_button_pressed()){
-                //steering_set_speed(en_MAV, cmdSFM);
-                steering_set_position(en_POS, cmdPOS);
-            }
-
-            steering_set_position(en_POS, cmdPOS);
-            wheels_set_speed(en_MARD, en_MARG, 50, 50);*/
+                en_POS = GPIO_PIN_SET;
+                // Assure la non-contradiction des commandes moteurs
+                if ((en_MAV == GPIO_PIN_SET) && (en_POS == GPIO_PIN_SET))
+                {
+                	en_MAV = GPIO_PIN_RESET;
+                }
+                if (!steering_is_a_button_pressed()){
+                    //steering_set_speed(en_MAV, cmdSFM);
+                    steering_set_position(en_POS, cmdPOS);
+                }
+                steering_move_with_button();
+			#elif (MODE == 2)
+                car_control(modeSpeed, modeSteer);
+			#else
+                carLatitude = dms2dd(latDeg, latMin, latSec);
+                carLatitude = dms2dd(lonDeg, lonMin, lonSec);
+                movement_with_GPS(carLatitude, carLongitude, joinLatitude, joinLongitude);
+			#endif
         }
         
         /* CAN */
@@ -287,7 +277,7 @@ int main(void)
             data[1] = ADCBUF[1] & 0xFF;
             
             data[2] = (ADCBUF[0] >> 8) & 0xFF; // Bat_mes
-            data[3] = ADCBUF[0] & 0xFF;
+            data[3] =  ADCBUF[0] & 0xFF;
             
             data[4] = (VMG_mes >> 8) & 0xFF; // VMG_mes
             data[5] = VMG_mes & 0xFF;
@@ -357,7 +347,7 @@ void SystemClock_Config(void)
     HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
     
     /* SysTick_IRQn interrupt configuration */
-    HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(SysTick_IRQn, 0, 15U);
 }
 
 /* USER CODE BEGIN 4 */
