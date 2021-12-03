@@ -1,0 +1,2 @@
+lidar_detection:rslidar_sdk
+-DCATKIN_DEVEL_PREFIX=/home/romainchlt/Documents/geiflix/function_1-Lidar/src/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/romainchlt/Documents/geiflix/function_1-Lidar/src/catkin_ws/install -G Unix Makefiles

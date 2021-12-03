@@ -1,0 +1,8 @@
+prefix=/home/romainchlt/Documents/geiflix/function_1-Lidar/src/catkin_ws/install
+
+Name: lidar_detection
+Description: Description of lidar_detection
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
