@@ -52,7 +52,7 @@ extern int modeSpeed;
 extern int modeSteer;
 
 int obstacle = 0;		//variable permettant de savoir si un obstacle est détecté
-int tmpSpeed, tmpSteer, testAvant;
+int tmpLRM = 50;
 
 /* USER CODE END 0 */
 
@@ -235,6 +235,7 @@ void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan)
 	{
 		cmdSFM = read_cmd(hcan->pRxMsg->Data[2], &en_MAV);
 		cmdPOS = read_cmd(hcan->pRxMsg->Data[3], &en_POS);
+		tmpLRM = read_cmd(hcan->pRxMsg->Data[0], &en_MARG);
 		if(obstacle==0){
 			cmdLRM = read_cmd(hcan->pRxMsg->Data[0], &en_MARG);
 			cmdRRM = read_cmd(hcan->pRxMsg->Data[1], &en_MARD);
@@ -254,45 +255,40 @@ void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan)
 
 	}
 	//consigne ultrasons
+
 	if(hcan->pRxMsg->StdId == CAN_ID_US2)
 	{
 		AVC = read_us(hcan->pRxMsg->Data[5]);
 		ARG = read_us(hcan->pRxMsg->Data[1]);
 		ARD = read_us(hcan->pRxMsg->Data[3]);
-		if((AVC<50) && (cmdLRM>=50)){			//si obstacle détecte sur Avant Centre et la voiture avance
+		if((AVC<50) && (tmpLRM>50) && (AVC!=0)){			//si obstacle détecte sur Avant Centre et la voiture avance
 			obstacle = 1;
-
-			/*tmpSpeed = modeSpeed;   //mode 2
-			tmpSteer = modeSteer;
-			modeSpeed = 00;
-			modeSteer= 00;*/
-
 			stop_voiture();
-
+		}else if((ARG<50) && (tmpLRM<50) && (ARG!=0)){
+			obstacle = 1;
+			stop_voiture();
 		}else{
 			obstacle=0;
-			/*modeSpeed = tmpSpeed ;
-			modeSteer = tmpSteer ;*/
-
 		}
 	}
 
 	if(hcan->pRxMsg->StdId == CAN_ID_US1)
-		{
-			AVG = read_us(hcan->pRxMsg->Data[1]);
-			AVD = read_us(hcan->pRxMsg->Data[3]);
-			ARC = read_us(hcan->pRxMsg->Data[5]);
-			if(ARC<50 && cmdLRM<=50){					//si obstacle détecte sur Arrière Centre et la voiture recule
-				obstacle = 1;
-				stop_voiture();
+	{
+		AVG = read_us(hcan->pRxMsg->Data[1]);
+		AVD = read_us(hcan->pRxMsg->Data[3]);
+		ARC = read_us(hcan->pRxMsg->Data[5]);
+		//if(ARC<50 && tmpLRM<50){					//si obstacle détecte sur Arrière Centre et la voiture recule
+			//obstacle = 1;
+			//stop_voiture();
 			/*}else if ((AVG<50 || AVD<50) && cmdLRM>=50){	//si obstacle détecte sur Avant Gauche/droite et la voiture avance
 				obstacle=1;
 				stop_voiture();*/
-			}else{
-				obstacle=0;
-			}
-		}
-		
+		//}else{
+			//obstacle=0;
+		//}
+	}
+
+
 	__HAL_CAN_ENABLE_IT(hcan, CAN_IT_FMP0);
 }
 /* USER CODE END 1 */
