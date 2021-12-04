@@ -54,6 +54,14 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 
+extern CAN_HandleTypeDef     hcan;
+
+int SEND_CAN = 1;
+AHRS_3AxisValues accelerometer;
+AHRS_3AxisValues gyroscope;
+AHRS_3AxisValues magnetometer;
+AHRS_3AxisValues *eulerangles;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -125,17 +133,32 @@ int main(void)
 	/* Various initializations */
 	GLOBVAR_Init();
 	SCHEDULER_Init();
-	/*SCHEDULER_Run();*/
+	SCHEDULER_Run();
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
 	uint8_t data[8]={1,2,3,4,5,6,7,8};
+	magnetometer.x = 1.0;
+	accelerometer.x= 1.0;
+	gyroscope.x=1.0;
+
 	while (1)
 	{
 		/* USER CODE END WHILE */
-		CAN_Send(data, 0x201);
+		printf("hello\n");
+		//eulerangles = AHRS_GetEulerAngles();
+		//AHRS_Update(&accelerometer, &gyroscope, &magnetometer);
+		//printf("%f, %f, %f\n", accelerometer.x, accelerometer.y, accelerometer.z);
+		//printf("%f, %f, %f\n", gyroscope.x, gyroscope.y, gyroscope.z);
+		//swprintf("%f, %f, %f\n", magnetometer.x, magnetometer.y, magnetometer.z);
 		/* USER CODE BEGIN 3 */
+		// Envoi des mesures
+		if (SEND_CAN){
+		    SEND_CAN = 0;
+		    CAN_Send(data, 0x201);
+		}
+
 		//HAL_Delay(1000);
 		//printf ("coucou\n");
 	}

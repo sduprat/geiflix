@@ -23,7 +23,7 @@
 //Definition des modes de vitesse :: SPEED MODES
 #define STOP 		50
 #define REVERSE 	40
-#define WALK 		55
+#define WALK 		58
 #define JOG 		65
 #define RUN 		75
 
@@ -40,7 +40,7 @@
 #define DIFF_NONE 	0
 #define DIFF_SMALL 	5
 #define DIFF_MEDIUM 10
-#define DIFF_LARGE 	20
+#define DIFF_LARGE 	15
 
 //Definition des types d'azimut
 #define AZIMUT_FORWARD 	0
@@ -132,13 +132,13 @@ void car_control(int requested_speed, int requested_steer){
 			wheels_set_speed(GPIO_PIN_RESET, GPIO_PIN_RESET, STOP, STOP);
 			break;
 		case REVERSE:
-			if (azimut == AZIMUT_RIGHT){wheels_set_speed(GPIO_PIN_SET, GPIO_PIN_SET, (modeSpeed*(100-diff))/100, modeSpeed);}
-			else if (azimut == AZIMUT_LEFT) {wheels_set_speed(GPIO_PIN_SET, GPIO_PIN_SET, modeSpeed, (modeSpeed*diff)/100);}
+			if (azimut == AZIMUT_RIGHT){wheels_set_speed(GPIO_PIN_SET, GPIO_PIN_SET, (modeSpeed*(100+diff/2))/100, (modeSpeed*(100-diff/2))/100);}
+			else if (azimut == AZIMUT_LEFT) {wheels_set_speed(GPIO_PIN_SET, GPIO_PIN_SET, (modeSpeed*(100-diff/2))/100, (modeSpeed*(100+diff/2))/100);}
 			else {wheels_set_speed(GPIO_PIN_SET, GPIO_PIN_SET, modeSpeed, modeSpeed);}
 			break;
 		case WALK:
-			if (azimut == AZIMUT_RIGHT){wheels_set_speed(GPIO_PIN_SET, GPIO_PIN_SET, modeSpeed, (modeSpeed*(100+diff))/100);}
-			else if (azimut == AZIMUT_LEFT) {wheels_set_speed(GPIO_PIN_SET, GPIO_PIN_SET, (modeSpeed*(100+diff))/100, modeSpeed);}
+			if (azimut == AZIMUT_RIGHT){wheels_set_speed(GPIO_PIN_SET, GPIO_PIN_SET, (modeSpeed*(100-diff/2))/100, (modeSpeed*(100+diff/2))/100);}
+			else if (azimut == AZIMUT_LEFT) {wheels_set_speed(GPIO_PIN_SET, GPIO_PIN_SET, (modeSpeed*(100+diff/2))/100, (modeSpeed*(100-diff/2))/100);}
 			else {wheels_set_speed(GPIO_PIN_SET, GPIO_PIN_SET, modeSpeed, modeSpeed);}
 			break;
 		case JOG:

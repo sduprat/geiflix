@@ -43,6 +43,7 @@
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
 extern uint8_t flag_1ms;
+extern CAN_HandleTypeDef hcan;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -53,12 +54,14 @@ extern uint8_t flag_1ms;
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+
+
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
 
 /* USER CODE BEGIN EV */
-
+extern int SEND_CAN;
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -185,10 +188,17 @@ void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
   flag_1ms=1;
+  static int cmpt_can = 0;
   /* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
+  HAL_SYSTICK_IRQHandler();
   /* USER CODE BEGIN SysTick_IRQn 1 */
+  cmpt_can ++;
 
+  if (cmpt_can == PERIOD_SEND_MES){
+	SEND_CAN = 1;
+	cmpt_can = 0;
+  }
   /* USER CODE END SysTick_IRQn 1 */
 }
 
@@ -228,6 +238,26 @@ void EXTI9_5_IRQHandler(void)
 }
 
 /* USER CODE BEGIN 1 */
+
+/**
+* @brief This function handles CAN RX0 interrupts.
+*/
+void CAN1_RX0_IRQHandler(void)
+{
+  /* USER CODE BEGIN CAN1_RX0_IRQHandler 0 */
+
+  /* USER CODE END CAN1_RX0_IRQHandler 0 */
+  //Si besoin de traitement des infos reçues
+  HAL_CAN_IRQHandler(&hcan);
+  //Sinon on remet à 0 le bit d'interruption
+  //__HAL_CAN_ENABLE_IT(hcan, CAN_IT_RX_FIFO0_MSG_PENDING);
+
+  /* USER CODE BEGIN CAN1_RX0_IRQHandler 1 */
+
+  /* USER CODE END CAN1_RX0_IRQHandler 1 */
+}
+
+
 
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

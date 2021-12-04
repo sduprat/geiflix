@@ -52,11 +52,11 @@
 #define CANx_RELEASE_RESET()            __HAL_RCC_CAN1_RELEASE_RESET()
 
 /* Definition for CANx Pins */
-#define CANx_TX_PIN                    GPIO_PIN_9
-#define CANx_TX_GPIO_PORT              GPIOB
+#define CANx_TX_PIN                    GPIO_PIN_12
+#define CANx_TX_GPIO_PORT              GPIOA
 #define CANx_TX_AF                     GPIO_AF9_CAN1
-#define CANx_RX_PIN                    GPIO_PIN_8
-#define CANx_RX_GPIO_PORT              GPIOB
+#define CANx_RX_PIN                    GPIO_PIN_11
+#define CANx_RX_GPIO_PORT              GPIOA
 #define CANx_RX_AF                     GPIO_AF9_CAN1
 
 /* Definition for CAN's NVIC */
@@ -74,7 +74,8 @@
 /*
  * Local variables
  */
-static CAN_HandleTypeDef     hcan;
+//static CAN_HandleTypeDef     hcan;
+CAN_HandleTypeDef     hcan;
 static CAN_TxHeaderTypeDef   TxHeader;
 static CAN_RxHeaderTypeDef   RxHeader;
 static uint8_t               TxData[8];
@@ -93,7 +94,7 @@ void CAN_Init(void)
 	CAN_FilterTypeDef  sFilterConfig;
 
 	hcan.Instance = CANx;
-	hcan.Init.Prescaler = 8;
+	hcan.Init.Prescaler = 20;
 	hcan.Init.Mode = CAN_MODE_NORMAL;
 	hcan.Init.SyncJumpWidth = CAN_SJW_1TQ;
 	hcan.Init.TimeSeg1 = CAN_BS1_7TQ;
@@ -180,7 +181,7 @@ void HAL_CAN_MspInit(CAN_HandleTypeDef *hcan)
 
 	/*##-3- Configure the NVIC #################################################*/
 	/* NVIC configuration for CAN1 Reception complete interrupt */
-	HAL_NVIC_SetPriority(CANx_RX_IRQn, 1, 0);
+	HAL_NVIC_SetPriority(CANx_RX_IRQn, 15, 0);
 	HAL_NVIC_EnableIRQ(CANx_RX_IRQn);
 }
 
@@ -258,7 +259,7 @@ void CAN_Send(uint8_t* data, uint32_t id)
 			while (1);
 		}
 		HAL_Delay(10);
-	}
+}
 
 
 void CAN_AddRXCallback(CanRxCallback callback)
