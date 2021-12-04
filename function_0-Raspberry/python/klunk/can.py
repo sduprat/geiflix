@@ -1,6 +1,8 @@
+from threading import Thread
 import can
 import klunk as k
 import klunk.motors
+import klunk.ultrasound as us
 
 def can_message(can_id, can_data):
     return can.Message(arbitration_id=can_id, data=can_data, is_extended_id=False)
@@ -17,3 +19,16 @@ def is_message_from_ids(message, ids):
     else:
         return message.arbitration_id == ids
 
+
+class Can(Thread):
+    def __init__(self,bus,car):
+        Thread.__init__(self)
+        self.bus = bus
+        self.car = car
+
+    def run(self):
+        while True:
+            data = self.bus.recv(1024)
+
+            if klunk.can.is_message_from_ids(data, klunk.ultrasound.CAN_IDS):
+                self.car.update_ultrasound(data)
