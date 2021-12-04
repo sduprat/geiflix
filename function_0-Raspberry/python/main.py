@@ -4,6 +4,7 @@ import time
 import can
 import os
 import struct
+import klunk as k
 
 HOST = ''                 # Symbolic name meaning all available interfaces
 PORT = 6666              # Arbitrary non-privileged port
@@ -169,6 +170,11 @@ class MyReceive(Thread):
             data = conn.recv(1024)
 
             if not data: break
+            
+            # Tests Klunk
+            print(data)
+            break
+            # Fin tests Klunk
 
             #for b in data:
             #    print(b)
@@ -255,11 +261,15 @@ if __name__ == "__main__":
     conn, addr = s.accept()
     print('Connected by', addr)
 
+    xboxThread = "TBD"
+    webThread = "TBD"
+    jetsonThread = "TBD"
+    canThread = "TBD"
 
-    newthread = MyReceive(conn, bus)
-    newthread.start()
-    newsend = MySend(conn, bus)
-    newsend.start()
+    recThread = MyReceive(conn, bus)
+    recThread.start()
+    sendThread = MySend(conn, bus)
+    sendThread.start()
 
-    newthread.join()
-    newsend.join()
+    recThread.join()
+    sendThread.join()
