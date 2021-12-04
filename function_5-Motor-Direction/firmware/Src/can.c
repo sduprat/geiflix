@@ -219,12 +219,12 @@ int read_mode(uint8_t data) //En soit cette fonction ne sert a rien parce qu'on 
 void stop_voiture(){			//met toutes les commandes moteur au point d'arrêt
 	en_MARG = GPIO_PIN_SET;
 	en_MARD = GPIO_PIN_SET;
-	en_MAV = GPIO_PIN_SET;
-	en_POS = GPIO_PIN_SET;
+	//en_MAV = GPIO_PIN_SET;
+	//en_POS = GPIO_PIN_SET;
 	cmdLRM = 50;
 	cmdRRM = 50;
-	cmdSFM = 50;
-	cmdPOS = 50;
+	//cmdSFM = 50;
+	//cmdPOS = 50;
 }
 
 void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan)
@@ -233,12 +233,11 @@ void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan)
 	/* Consigne vitesse moteur */
 	if(hcan->pRxMsg->StdId == CAN_ID_CMC)
 	{
+		cmdSFM = read_cmd(hcan->pRxMsg->Data[2], &en_MAV);
+		cmdPOS = read_cmd(hcan->pRxMsg->Data[3], &en_POS);
 		if(obstacle==0){
 			cmdLRM = read_cmd(hcan->pRxMsg->Data[0], &en_MARG);
 			cmdRRM = read_cmd(hcan->pRxMsg->Data[1], &en_MARD);
-			cmdSFM = read_cmd(hcan->pRxMsg->Data[2], &en_MAV);
-			cmdPOS = read_cmd(hcan->pRxMsg->Data[3], &en_POS);
-
 		}
 
 	}
@@ -286,9 +285,9 @@ void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan)
 			if(ARC<50 && cmdLRM<=50){					//si obstacle détecte sur Arrière Centre et la voiture recule
 				obstacle = 1;
 				stop_voiture();
-			}else if ((AVG<50 || AVD<50) && cmdLRM>=50){	//si obstacle détecte sur Avant Gauche/droite et la voiture avance
+			/*}else if ((AVG<50 || AVD<50) && cmdLRM>=50){	//si obstacle détecte sur Avant Gauche/droite et la voiture avance
 				obstacle=1;
-				stop_voiture();
+				stop_voiture();*/
 			}else{
 				obstacle=0;
 			}
