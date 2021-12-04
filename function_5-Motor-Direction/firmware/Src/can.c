@@ -52,9 +52,11 @@ extern int modeSteer;
 extern double latDeg;
 extern double latMin;
 extern double latSec;
+extern double latTen;
 extern double lonDeg;
 extern double lonMin;
 extern double lonSec;
+extern double lonTen;
 
 
 /* USER CODE END 0 */
@@ -234,9 +236,11 @@ void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan)
 		latDeg = read_mode(hcan->pRxMsg->Data[0]);
 		latMin = read_mode(hcan->pRxMsg->Data[1]);
 		latSec = read_mode(hcan->pRxMsg->Data[2]);
-		lonDeg = read_mode(hcan->pRxMsg->Data[3]);
-		lonMin = read_mode(hcan->pRxMsg->Data[4]);
-		lonSec = read_mode(hcan->pRxMsg->Data[5]);
+		latTen = read_mode(hcan->pRxMsg->Data[3]);
+		lonDeg = read_mode(hcan->pRxMsg->Data[4]);
+		lonMin = read_mode(hcan->pRxMsg->Data[5]);
+		lonSec = read_mode(hcan->pRxMsg->Data[6]);
+		lonTen = read_mode(hcan->pRxMsg->Data[7]);
 	}
 	__HAL_CAN_ENABLE_IT(hcan, CAN_IT_FMP0);
 }

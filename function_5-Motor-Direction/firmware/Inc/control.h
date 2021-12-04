@@ -11,6 +11,8 @@
 extern int modeSpeed;
 extern int modeSteer;
 
+#include <stdbool.h>
+
 /**
 *	Controle les MARG, MARD et MAV à partir de modeSpeed et modeSteer recus via le CAN
 **/

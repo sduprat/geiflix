@@ -6,7 +6,7 @@
  ******************************************************************************
  ** This notice applies to any and all portions of this file
  * that are not between comment pairs USER CODE BEGIN and
- * USER CODE END. Other portions of this file, whether
+ * USER CODE END. Other  portions of this file, whether
  * inserted by the user or by software development tools
  * are owned by their respective copyright owners.
  *
@@ -48,6 +48,7 @@
 #include "power.h"
 #include "control.h"
 #include "calibrate.h"
+#include "GPS.h"
 
 /* USER CODE BEGIN Includes */
 
@@ -58,7 +59,7 @@
  * 3- Trames 0x030 (GPS)
  */
 
-#define MODE 2
+#define MODE 3
 
 /* USER CODE END Includes */
 
@@ -104,9 +105,11 @@ int modeSteer = 0;
 double latDeg;
 double latMin;
 double latSec;
+double latTen;
 double lonDeg;
 double lonMin;
 double lonSec;
+double lonTen;
 
 double carLatitude = 0;
 double carLongitude = 0;
@@ -115,6 +118,7 @@ double joinLatitude = 0;
 double joinLongitude = 0;
 
 double alpha = 0;
+bool trip_done = false;
 
 extern CAN_HandleTypeDef hcan;
 
@@ -237,41 +241,44 @@ int main(void)
     while (1)
     {
         /* USER CODE END WHILE */
-        
         /* USER CODE BEGIN 3 */
 
         /* Update motors command*/
         if (UPDATE_CMD_FLAG){
             UPDATE_CMD_FLAG = 0;
-            
+
 			#if (MODE == 0)
             	calibrate();
+
 			#elif (MODE == 1)
             	wheels_set_speed(en_MARD, en_MARG, cmdRRM, cmdLRM);
-
                 en_POS = GPIO_PIN_SET;
                 // Assure la non-contradiction des commandes moteurs
-                if ((en_MAV == GPIO_PIN_SET) && (en_POS == GPIO_PIN_SET))
-                {
+                if ((en_MAV == GPIO_PIN_SET) && (en_POS == GPIO_PIN_SET)) {
                 	en_MAV = GPIO_PIN_RESET;
                 }
-                if (!steering_is_a_button_pressed()){
+                if (!steering_is_a_button_pressed()) {
                     //steering_set_speed(en_MAV, cmdSFM);
                     steering_set_position(en_POS, cmdPOS);
                 }
                 steering_move_with_button();
+
 			#elif (MODE == 2)
                 car_control(modeSpeed, modeSteer);
+
 			#else
-                carLatitude = dms2dd(latDeg, latMin, latSec);
-                carLatitude = dms2dd(lonDeg, lonMin, lonSec);
-                movement_with_GPS(carLatitude, carLongitude, joinLatitude, joinLongitude);
+                while (!trip_done) {
+					carLatitude = dms2dd(latDeg, latMin, latSec, latTen);
+					carLongitude = dms2dd(lonDeg, lonMin, lonSec, lonTen);
+					movement_with_GPS(carLatitude, carLongitude, joinLatitude, joinLongitude);
+                }
+                car_control(modeSpeed, modeSteer);
 			#endif
         }
-        
+
         /* CAN */
         // Envoi des mesures
-        if (SEND_CAN){
+        if (SEND_CAN) {
             SEND_CAN = 0;
             data[0] = (ADCBUF[1] >> 8) & 0xFF; // Vol_mes
             data[1] = ADCBUF[1] & 0xFF;

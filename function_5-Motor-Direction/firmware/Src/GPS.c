@@ -17,12 +17,20 @@
 
 /* Programs ------------------------------------------------------------------*/
 
-/* brief	Conversion coordinates from DMS (degrees / minutes / seconds) to DD (decimal degrees)
+/* brief	Conversion coordinates from DMS (degrees / minutes / seconds / tenths of a second) to DD (decimal degrees)
  * param	double angle_rad 	Angle in radians
  * retval	double angle_deg 	Angle in degrees
  * */
-double dms2dd(double deg, double min, double sec) {
-	return  (deg + (min/60) + (sec/3600));
+double dms2dd(double deg, double min, double sec, double ten) {
+
+	  if (ten < 10) {sec = sec + ten/10;}
+	  else if (ten < 100) {sec = sec + ten/100;}
+	  else if (ten < 1000) {sec = sec + ten/1000;}
+
+	  min = min + sec/60;
+	  deg = deg + min/60;
+
+	  return deg;
 }
 
 /* brief	Conversion degrees to radians

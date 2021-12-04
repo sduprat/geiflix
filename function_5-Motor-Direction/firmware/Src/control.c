@@ -7,6 +7,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 
+
 #include "control.h"
 
 #include "steering.h"
@@ -53,7 +54,7 @@
 
 
 extern double alpha;
-
+extern bool trip_done;
 
 /* Private variables ---------------------------------------------------------*/
 
@@ -316,7 +317,7 @@ int direction_management(double beta) {
 void direction_speed(double distance, double beta){
 
 	// calculate the angle command according to the angle beta
-	int angle_command = direction_management(beta);
+	int angle_command = STRAIGHT;//direction_management(beta);
 
 	// if beta is between 270 and 90 --> the car is in the general right direction -> we manage the speed in normal functioning
 	if ((beta <= 90 && beta >= 0) || (beta <= 360 && beta >= 270)) {
@@ -331,13 +332,17 @@ void direction_speed(double distance, double beta){
 		else {
 			alpha = alpha + calculate_alpha(STOP, STRAIGHT);
 		    car_control(STOP, STRAIGHT);
+		    trip_done = true;
+		    modeSpeed = JOG;
+		    modeSteer = HARD_L;
 		}
 	}
 
 	// if the car is totally in the wrong direction --> the car turns slowly
 	else {
 		alpha = alpha + calculate_alpha(WALK, angle_command);
-	    car_control(WALK, angle_command); }
+	    car_control(WALK, angle_command);
+	}
 
 }
 
@@ -349,9 +354,9 @@ void direction_speed(double distance, double beta){
 void movement_with_GPS(double lat1, double lon1, double lat2, double lon2) {
 
 	double distance = get_distance(lat1, lon1, lat2, lon2);
-	double teta = get_angle_GPS(lat1, lon1, lat2, lon2);
+	//double teta = get_angle_GPS(lat1, lon1, lat2, lon2);
 
-	double beta = calculate_beta(teta);
+	double beta = 0; //calculate_beta(teta);
 
 	direction_speed(distance, beta);
 

@@ -11,11 +11,11 @@
 #include "steering.h"
 
 
-/* brief	Conversion coordinates from DMS (degrees / minutes / seconds) to DD (decimal degrees)
+/* brief	Conversion coordinates from DMS (degrees / minutes / seconds / tenths of a second) to DD (decimal degrees)
  * param	double angle_rad 	Angle in radians
  * retval	double angle_deg 	Angle in degrees
  * */
-double dms2dd(double deg, double min, double sec);
+double dms2dd(double deg, double min, double sec, double ten);
 
 /* brief	Conversion degrees to radians
  * param	double angle_rad 	Angle in radians
