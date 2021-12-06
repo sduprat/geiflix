@@ -125,7 +125,8 @@ double lonTenDes = 0;
 // GPS coordinates of the car
 double carLatitude = 0;
 double carLongitude = 0;
-
+double dist = 0;
+double dist_reel = 0;
 // GPS coordinates of the location where we want to go
 double destLatitude = 0;
 double destLongitude = 0;
@@ -289,8 +290,8 @@ int main(void)
                 	while (pos_OK == 0) {
 						carLatitude = dms2dd(latDegPos, latMinPos, latSecPos, latTenPos);
 						carLongitude = dms2dd(lonDegPos, lonMinPos, lonSecPos, lonTenPos);
-						double dist = get_distance(carLatitude, carLongitude, destLatitude, destLongitude);
-						go_straight_without_GPS(dist);
+						dist = get_distance(carLatitude, carLongitude, destLatitude, destLongitude);
+						dist_reel = go_straight_without_GPS(dist);
 						//movement_with_GPS(carLatitude, carLongitude, goLatitude, goLongitude);
 					}
                 	car_coordinates_to_zero();

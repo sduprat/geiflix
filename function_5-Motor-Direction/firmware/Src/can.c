@@ -243,24 +243,24 @@ void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan)
 	}
 
 	if(hcan->pRxMsg->StdId == CAN_ID_POS) {
-		latDegPos = read_mode(hcan->pRxMsg->Data[0]);
-		latMinPos = read_mode(hcan->pRxMsg->Data[1]);
-		latSecPos = read_mode(hcan->pRxMsg->Data[2]);
-		latTenPos = read_mode(hcan->pRxMsg->Data[3]);
-		lonDegPos = read_mode(hcan->pRxMsg->Data[4]);
-		lonMinPos = read_mode(hcan->pRxMsg->Data[5]);
-		lonSecPos = read_mode(hcan->pRxMsg->Data[6]);
-		lonTenPos = read_mode(hcan->pRxMsg->Data[7]);
+		lonDegPos = read_mode(hcan->pRxMsg->Data[0]);
+		lonMinPos = read_mode(hcan->pRxMsg->Data[1]);
+		lonSecPos = read_mode(hcan->pRxMsg->Data[2]);
+		lonTenPos = read_mode(hcan->pRxMsg->Data[3]);
+		latDegPos = read_mode(hcan->pRxMsg->Data[4]);
+		latMinPos = read_mode(hcan->pRxMsg->Data[5]);
+		latSecPos = read_mode(hcan->pRxMsg->Data[6]);
+		latTenPos = read_mode(hcan->pRxMsg->Data[7]);
 	}
 	if(hcan->pRxMsg->StdId == CAN_ID_DES) {
-		latDegDes = read_mode(hcan->pRxMsg->Data[0]);
-		latMinDes = read_mode(hcan->pRxMsg->Data[1]);
-		latSecDes = read_mode(hcan->pRxMsg->Data[2]);
-		latTenDes = read_mode(hcan->pRxMsg->Data[3]);
-		lonDegDes = read_mode(hcan->pRxMsg->Data[4]);
-		lonMinDes = read_mode(hcan->pRxMsg->Data[5]);
-		lonSecDes = read_mode(hcan->pRxMsg->Data[6]);
-		lonTenDes = read_mode(hcan->pRxMsg->Data[7]);
+		lonDegDes = read_mode(hcan->pRxMsg->Data[0]);
+		lonMinDes = read_mode(hcan->pRxMsg->Data[1]);
+		lonSecDes = read_mode(hcan->pRxMsg->Data[2]);
+		lonTenDes = read_mode(hcan->pRxMsg->Data[3]);
+		latDegDes = read_mode(hcan->pRxMsg->Data[4]);
+		latMinDes = read_mode(hcan->pRxMsg->Data[5]);
+		latSecDes = read_mode(hcan->pRxMsg->Data[6]);
+		latTenDes = read_mode(hcan->pRxMsg->Data[7]);
 	}
 	__HAL_CAN_ENABLE_IT(hcan, CAN_IT_FMP0);
 }
