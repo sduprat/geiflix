@@ -54,7 +54,7 @@
 
 
 extern double alpha;
-extern bool trip_done;
+extern int pos_OK;
 
 /* Private variables ---------------------------------------------------------*/
 
@@ -188,7 +188,10 @@ double go_straight_without_GPS(double distance){
 	}
 
 	//stop at 25cm
-	else {wheels_set_speed(GPIO_PIN_SET, GPIO_PIN_SET, 50, 50);}
+	else {
+		wheels_set_speed(GPIO_PIN_SET, GPIO_PIN_SET, 50, 50);
+		pos_OK = 1;
+	}
 
 	return distance;
 }
@@ -332,9 +335,7 @@ void direction_speed(double distance, double beta){
 		else {
 			alpha = alpha + calculate_alpha(STOP, STRAIGHT);
 		    car_control(STOP, STRAIGHT);
-		    trip_done = true;
-		    modeSpeed = JOG;
-		    modeSteer = HARD_L;
+		    pos_OK = 1;
 		}
 	}
 
@@ -354,12 +355,20 @@ void direction_speed(double distance, double beta){
 void movement_with_GPS(double lat1, double lon1, double lat2, double lon2) {
 
 	double distance = get_distance(lat1, lon1, lat2, lon2);
-	//double teta = get_angle_GPS(lat1, lon1, lat2, lon2);
+	double teta = get_angle_GPS(lat1, lon1, lat2, lon2);
 
-	double beta = 0; //calculate_beta(teta);
+	double beta = calculate_beta(teta);
 
 	direction_speed(distance, beta);
 
 }
 
+/* brief	Make a 360 degrees turn
+ * param	None
+ * retval	None
+ * */
+void turn360(void) {
+	steering_set_position(GPIO_PIN_SET, HARD_L);
+	wheels_set_speed(GPIO_PIN_SET, GPIO_PIN_SET, (60*(100+(2*DIFF_LARGE)/3))/100, (60*(100-DIFF_LARGE/3))/100);
+}
 

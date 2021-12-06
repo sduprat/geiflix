@@ -12,8 +12,8 @@
 
 
 /* brief	Conversion coordinates from DMS (degrees / minutes / seconds / tenths of a second) to DD (decimal degrees)
- * param	double angle_rad 	Angle in radians
- * retval	double angle_deg 	Angle in degrees
+ * param	double deg, min, sec, ten 	Angle in DMS
+ * retval	double angle_deg 			Angle in degrees decimals
  * */
 double dms2dd(double deg, double min, double sec, double ten);
 
@@ -36,5 +36,16 @@ double get_distance(double lat1, double lon1, double lat2, double lon2);
  * */
 double get_angle_GPS(double lat1, double lon1, double lat2, double lon2);
 
+/* brief	Set to 0 car coordinates
+ * param	None
+ * retval	None
+ * */
+void car_coordinates_to_zero(void);
+
+/* brief	Set to 0 destination coordinates
+ * param	None
+ * retval	None
+ * */
+void dest_coordinates_to_zero(void);
 
 #endif /* GPS_H_ */

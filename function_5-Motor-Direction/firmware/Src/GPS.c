@@ -15,11 +15,30 @@
 #define PI 3.14159265358979
 
 
+extern double latDegPos;
+extern double latMinPos;
+extern double latSecPos;
+extern double latTenPos;
+extern double lonDegPos;
+extern double lonMinPos;
+extern double lonSecPos;
+extern double lonTenPos;
+
+
+extern double latDegDes;
+extern double latMinDes;
+extern double latSecDes;
+extern double latTenDes;
+extern double lonDegDes;
+extern double lonMinDes;
+extern double lonSecDes;
+extern double lonTenDes;
+
 /* Programs ------------------------------------------------------------------*/
 
 /* brief	Conversion coordinates from DMS (degrees / minutes / seconds / tenths of a second) to DD (decimal degrees)
- * param	double angle_rad 	Angle in radians
- * retval	double angle_deg 	Angle in degrees
+ * param	double deg, min, sec, ten 	Angle in DMS
+ * retval	double angle_deg 			Angle in degrees decimals
  * */
 double dms2dd(double deg, double min, double sec, double ten) {
 
@@ -91,5 +110,35 @@ double get_angle_GPS(double lat1, double lon1, double lat2, double lon2) {
 	angle_deg = fmod((angle_deg + 360.0), 360.0);
 
     return angle_deg;
+}
+
+/* brief	Set to 0 car coordinates
+ * param	None
+ * retval	None
+ * */
+void car_coordinates_to_zero(void) {
+	latDegPos = 0;
+	latMinPos = 0;
+	latSecPos = 0;
+	latTenPos = 0;
+	lonDegPos = 0;
+	lonMinPos = 0;
+	lonSecPos = 0;
+	lonTenPos = 0;
+}
+
+/* brief	Set to 0 destination coordinates
+ * param	None
+ * retval	None
+ * */
+void dest_coordinates_to_zero(void) {
+	latDegDes = 0;
+	latMinDes = 0;
+	latSecDes = 0;
+	latTenDes = 0;
+	lonDegDes = 0;
+	lonMinDes = 0;
+	lonSecDes = 0;
+	lonTenDes = 0;
 }
 

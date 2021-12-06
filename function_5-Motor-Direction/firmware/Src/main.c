@@ -102,23 +102,36 @@ uint8_t data[8] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
 int modeSpeed = 0;
 int modeSteer = 0;
 
-double latDeg;
-double latMin;
-double latSec;
-double latTen;
-double lonDeg;
-double lonMin;
-double lonSec;
-double lonTen;
+// data received in the CAN frame
+double latDegPos = 0;
+double latMinPos = 0;
+double latSecPos = 0;
+double latTenPos = 0;
+double lonDegPos = 0;
+double lonMinPos = 0;
+double lonSecPos = 0;
+double lonTenPos = 0;
 
+
+double latDegDes = 0;
+double latMinDes = 0;
+double latSecDes = 0;
+double latTenDes = 0;
+double lonDegDes = 0;
+double lonMinDes = 0;
+double lonSecDes = 0;
+double lonTenDes = 0;
+
+// GPS coordinates of the car
 double carLatitude = 0;
 double carLongitude = 0;
 
-double joinLatitude = 0;
-double joinLongitude = 0;
+// GPS coordinates of the location where we want to go
+double destLatitude = 0;
+double destLongitude = 0;
 
 double alpha = 0;
-bool trip_done = false;
+int pos_OK = 0;
 
 extern CAN_HandleTypeDef hcan;
 
@@ -267,12 +280,22 @@ int main(void)
                 car_control(modeSpeed, modeSteer);
 
 			#else
-                while (!trip_done) {
-					carLatitude = dms2dd(latDeg, latMin, latSec, latTen);
-					carLongitude = dms2dd(lonDeg, lonMin, lonSec, lonTen);
-					movement_with_GPS(carLatitude, carLongitude, joinLatitude, joinLongitude);
+                if (latDegDes != 0.0) {
+                	destLatitude = dms2dd(latDegDes, latMinDes, latSecDes, latTenDes);
+                	destLongitude = dms2dd(lonDegDes, lonMinDes, lonSecDes, lonTenDes);
+                	dest_coordinates_to_zero();
                 }
-                car_control(modeSpeed, modeSteer);
+                if (latDegPos != 0.0) {
+                	while (pos_OK == 0) {
+						carLatitude = dms2dd(latDegPos, latMinPos, latSecPos, latTenPos);
+						carLongitude = dms2dd(lonDegPos, lonMinPos, lonSecPos, lonTenPos);
+						double dist = get_distance(carLatitude, carLongitude, destLatitude, destLongitude);
+						go_straight_without_GPS(dist);
+						//movement_with_GPS(carLatitude, carLongitude, goLatitude, goLongitude);
+					}
+                	car_coordinates_to_zero();
+					//turn360();
+                }
 			#endif
         }
 
@@ -286,11 +309,11 @@ int main(void)
             data[2] = (ADCBUF[0] >> 8) & 0xFF; // Bat_mes
             data[3] =  ADCBUF[0] & 0xFF;
             
-            data[4] = (VMG_mes >> 8) & 0xFF; // VMG_mes
-            data[5] = VMG_mes & 0xFF;
+            data[4] = (pos_OK >> 8) & 0xFF; // pos_OK
+            data[5] = pos_OK & 0xFF;
             
-            data[6] = (VMD_mes >> 8) & 0xFF; // VMD_mes
-            data[7] = VMD_mes & 0xFF;
+            /*data[6] = (VMD_mes >> 8) & 0xFF; // VMD_mes
+            data[7] = VMD_mes & 0xFF;*/
             
             CAN_Send(data, CAN_ID_MS);
         }

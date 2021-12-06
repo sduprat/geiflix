@@ -49,15 +49,25 @@ extern GPIO_PinState en_MARG, en_MARD, en_MAV, en_POS;
 
 extern int modeSpeed;
 extern int modeSteer;
-extern double latDeg;
-extern double latMin;
-extern double latSec;
-extern double latTen;
-extern double lonDeg;
-extern double lonMin;
-extern double lonSec;
-extern double lonTen;
 
+extern double latDegPos;
+extern double latMinPos;
+extern double latSecPos;
+extern double latTenPos;
+extern double lonDegPos;
+extern double lonMinPos;
+extern double lonSecPos;
+extern double lonTenPos;
+
+
+extern double latDegDes;
+extern double latMinDes;
+extern double latSecDes;
+extern double latTenDes;
+extern double lonDegDes;
+extern double lonMinDes;
+extern double lonSecDes;
+extern double lonTenDes;
 
 /* USER CODE END 0 */
 
@@ -232,15 +242,25 @@ void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan)
 		modeSteer = read_mode(hcan->pRxMsg->Data[1]);
 	}
 
-	if(hcan->pRxMsg->StdId == CAN_ID_GPS) {
-		latDeg = read_mode(hcan->pRxMsg->Data[0]);
-		latMin = read_mode(hcan->pRxMsg->Data[1]);
-		latSec = read_mode(hcan->pRxMsg->Data[2]);
-		latTen = read_mode(hcan->pRxMsg->Data[3]);
-		lonDeg = read_mode(hcan->pRxMsg->Data[4]);
-		lonMin = read_mode(hcan->pRxMsg->Data[5]);
-		lonSec = read_mode(hcan->pRxMsg->Data[6]);
-		lonTen = read_mode(hcan->pRxMsg->Data[7]);
+	if(hcan->pRxMsg->StdId == CAN_ID_POS) {
+		latDegPos = read_mode(hcan->pRxMsg->Data[0]);
+		latMinPos = read_mode(hcan->pRxMsg->Data[1]);
+		latSecPos = read_mode(hcan->pRxMsg->Data[2]);
+		latTenPos = read_mode(hcan->pRxMsg->Data[3]);
+		lonDegPos = read_mode(hcan->pRxMsg->Data[4]);
+		lonMinPos = read_mode(hcan->pRxMsg->Data[5]);
+		lonSecPos = read_mode(hcan->pRxMsg->Data[6]);
+		lonTenPos = read_mode(hcan->pRxMsg->Data[7]);
+	}
+	if(hcan->pRxMsg->StdId == CAN_ID_DES) {
+		latDegDes = read_mode(hcan->pRxMsg->Data[0]);
+		latMinDes = read_mode(hcan->pRxMsg->Data[1]);
+		latSecDes = read_mode(hcan->pRxMsg->Data[2]);
+		latTenDes = read_mode(hcan->pRxMsg->Data[3]);
+		lonDegDes = read_mode(hcan->pRxMsg->Data[4]);
+		lonMinDes = read_mode(hcan->pRxMsg->Data[5]);
+		lonSecDes = read_mode(hcan->pRxMsg->Data[6]);
+		lonTenDes = read_mode(hcan->pRxMsg->Data[7]);
 	}
 	__HAL_CAN_ENABLE_IT(hcan, CAN_IT_FMP0);
 }

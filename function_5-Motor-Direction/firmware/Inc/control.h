@@ -61,4 +61,10 @@ void direction_speed(double distance, double beta);
  * */
 void movement_with_GPS(double lat1, double lon1, double lat2, double lon2);
 
+/* brief	Make a 360 degrees turn
+ * param	None
+ * retval	None
+ * */
+void turn360(void);
+
 #endif /* CONTROL_H_ */
