@@ -169,6 +169,11 @@ class MyReceive(Thread):
             data = conn.recv(1024)
 
             if not data: break
+            
+            # Tests Klunk
+            print(data)
+            break
+            # Fin tests Klunk
 
             #for b in data:
             #    print(b)
