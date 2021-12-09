@@ -257,3 +257,4 @@ sudo /sbin/ip link set can0 up type can bitrate 400000
 |Orientation Measures 1 (OM1)|0x1      |0x0        |0x1      |0x101 |
 |Orientation Measures 2 (OM2)|0x1      |0x0        |0x2      |0x102 |
 |Speed&Steering Command (SSC)|0x0      |0x2        |0x0      |0x020 |
+|GPS data (GPS)              |0x2      |0x0        |0x0      |0x200 |
