@@ -179,12 +179,14 @@ double go_straight_without_GPS(double distance){
 	if (distance > 2.0) {
 		wheels_set_speed(GPIO_PIN_SET, GPIO_PIN_SET, 70, 70);
 		distance = distance - MAX_SPEED_CM_S; // each second, the car travels 0,527m at this speed (52,7cm/s)
+		HAL_Delay(1000);
 	}
 
 	//medium speed between 2m and 25cm
 	else if (distance > 0.25) {
 		wheels_set_speed(GPIO_PIN_SET, GPIO_PIN_SET, 60, 60);
 		distance = distance - MED_SPEED_CM_S;
+		HAL_Delay(1000);
 	}
 
 	//stop at 25cm

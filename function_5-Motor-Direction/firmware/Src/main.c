@@ -287,14 +287,15 @@ int main(void)
                 	dest_coordinates_to_zero();
                 }
                 if (latDegPos != 0.0) {
+					carLatitude = dms2dd(latDegPos, latMinPos, latSecPos, latTenPos);
+					carLongitude = dms2dd(lonDegPos, lonMinPos, lonSecPos, lonTenPos);
+					car_coordinates_to_zero();
+					dist = get_distance(carLatitude, carLongitude, destLatitude, destLongitude);
+					pos_OK = 0;
                 	while (pos_OK == 0) {
-						carLatitude = dms2dd(latDegPos, latMinPos, latSecPos, latTenPos);
-						carLongitude = dms2dd(lonDegPos, lonMinPos, lonSecPos, lonTenPos);
-						dist = get_distance(carLatitude, carLongitude, destLatitude, destLongitude);
-						dist_reel = go_straight_without_GPS(dist);
+						dist = go_straight_without_GPS(dist);
 						//movement_with_GPS(carLatitude, carLongitude, goLatitude, goLongitude);
 					}
-                	car_coordinates_to_zero();
 					//turn360();
                 }
 			#endif
