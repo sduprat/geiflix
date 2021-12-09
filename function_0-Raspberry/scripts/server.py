@@ -7,7 +7,7 @@ import struct
 import socket
 from math import tan,pi
 
-HOST = '192.168.1.2'     # IP address on LAN
+HOST = ''     # IP address on LAN
 PORT = 6666              # Arbitrary non-privileged port
 
 CMC = 0x010
@@ -22,8 +22,20 @@ MAX_SPEED_FW = 75
 MAX_SPEED_BW = 25
 SPEED_STOP = 50
 
+<<<<<<< Updated upstream
 CAR_LENGTH = 60
 CAR_WIDTH = 40
+=======
+CAR_LEN_MM = 800
+
+TARGET_DIST_MM = 1500
+
+MAX_ERROR_MM = 2000
+MIN_ERROR_MM = -2000
+
+CORRECT_GAIN = ((MAX_SPEED_FW - MAX_SPEED_BW)/(MAX_ERROR_MM - MIN_ERROR_MM))
+K_GAIN = 1.5
+>>>>>>> Stashed changes
 
 class EthReceiver(Thread):
     def __init__(self,connSock, canBus):
@@ -42,9 +54,16 @@ class EthReceiver(Thread):
         self.angle = 0
         self.enable_speed = 0
         self.speed_cmd = 0
+<<<<<<< Updated upstream
         self.speed_left = 0
         self.speed_right = 0
         self.steering = 0
+=======
+        self.direction = 0
+        # self.movement = 0
+        # self.turn = 0
+        # self.enable_steering = 0
+>>>>>>> Stashed changes
         usAvG,usAvD,usArrC,usArrG,usArrD,usAvC = 0,0,0,0,0,0
         
         while True :
@@ -56,52 +75,41 @@ class EthReceiver(Thread):
             fromJetson = self.connSock.recv(1024)
             
             # Leave if no more data coming from Jetson (= eth link lost)
+            '''
             if not fromJetson: 
                 print('No data from Jetson')
                 break
+            '''
 
-            # Split data between distance (before ':') & angle (after ':')
+            # Split data between distance (1st 8 B) & angle (following 8 B)
+            #rawDist = fromJetson[0:8]
+            #rawAngle = fromJetson[8:16]
             fromJetson = fromJetson.decode('utf-8').split(":")
-            rawDist = fromJetson[0]
-            rawAngle = fromJetson[1]
-            if rawDist: self.distance = int(rawDist)
-            if rawAngle: self.angle = int(rawAngle)
-            print("d : ", self.distance, " ; a : ", self.angle)
+            try:
+                rawDist = fromJetson[0]
+                rawAngle = fromJetson[1]
+                if rawDist: self.distance = int(rawDist)
+                if rawAngle: self.angle = int(rawAngle)
+            except:
+                print('No data from Jetson')
+                break
 
-            # Update speed cmd according to the distance
+
+            #print("d : ", self.distance, " ; a : ", self.angle)
+
+            # Update speed cmd according to the distance ()
+            self.distance -= CAR_LEN_MM
             self.enable_speed = True
-            erreur = self.distance - 2000
-            if (erreur < -2000):
-                self.speed_cmd = -25
-            elif (erreur > 2000):
-                self.speed_cmd = 25
+            erreur = self.distance - TARGET_DIST_MM
+            if (erreur < -MAX_ERROR_MM):
+                self.speed_cmd = MAX_SPEED_BM
+            elif (erreur > MAX_ERROR_MM):
+                self.speed_cmd = MAX_SPEED_FW
             else:
-                self.speed_cmd = int(0.0125*erreur)
+                self.speed_cmd = int(K_GAIN*CORRECT_GAIN*erreur) + 50
 
-            
-            # # Get US sensors values
-            # if (fromDiscov.arbitration_id == US1):
-            #     # Av Gche
-            #     usAvG = int.from_bytes(fromDiscov.data[0:2], byteorder='big')
-            #     # Av Dte
-            #     usAvD = int.from_bytes(fromDiscov.data[2:4], byteorder='big')
-            #     # Arr Centre
-            #     usArrC = int.from_bytes(fromDiscov.data[4:6], byteorder='big')
-            # elif (fromDiscov.arbitration_id == US2):
-            #     # Arr Gche
-            #     usArrG = int.from_bytes(fromDiscov.data[0:2], byteorder='big')
-            #     # Arr Dte
-            #     usArrD = int.from_bytes(fromDiscov.data[2:4], byteorder='big')
-            #     # Av Centre
-            #     usAvC = int.from_bytes(fromDiscov.data[4:6], byteorder='big')
-            # 
-            # # Determine obstacle presence given direction (FW/BW) & US values
-            # obstacleDetected = ((self.speed_cmd > SPEED_STOP) and \
-            #                             ((usAvD < 50) or (usAvG < 50) or (usAvC < 50))) or \
-            #                     ((self.speed_cmd < SPEED_STOP) and \
-            #                             ((usArrD < 50) or (usArrG < 50) or (usArrC < 50)))
-            # self.enable_speed &= not obstacleDetected
-                        
+            print("d>",self.distance,"/ a>",self.angle,"/ s>",self.speed_cmd)
+
             # Enable or not speed in motor command
             if (self.enable_speed):
                 self.speed_cmd |= (1 << 7)
@@ -118,7 +126,7 @@ class EthReceiver(Thread):
             elif self.angle > 25:
                 self.steering = 100
             else:
-                self.steering = 2*(self.angle+25)
+                self.steering = 2*(self.angle+25) | (1 << 7)
 
             # Compose & send CAN message to Nucleo
             toNucleo = can.Message(arbitration_id=SSC,data=[self.speed_left, self.speed_right,0,self.steering],extended_id=False)
@@ -126,7 +134,7 @@ class EthReceiver(Thread):
 
         print("Connexion perdue")
 
-        stopNucleo = can.Message(arbitration_id=CMC,data=[0,0,0,0,0,0,0,0],extended_id=False)
+        stopNucleo = can.Message(arbitration_id=MCM,data=[0,0,0,32,0,0,0,0],extended_id=False)
         self.canBus.send(stopNucleo)
 
         self.connSock.close()
