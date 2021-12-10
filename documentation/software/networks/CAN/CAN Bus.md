@@ -247,12 +247,12 @@ sudo /sbin/ip link set can0 up type can bitrate 400000
 
 ### GPS Lat&Lon DD (GPS) 
 
-* **From:** NucleoL473
+* **From:** NucleoL476
 * **To:** Raspberry Pi
 * **Lenght (Bytes):** 8
 * **Data field:**
 
-* The Latitude and Longitude are transmitted is Decimal Degrees.
+* The Latitude and Longitude are transmitted in Decimal Degrees.
 
 |Byte 0 |Byte 1 |Byte 2 |Byte 3 |Byte 4 |Byte 5 |Byte 6 |Byte 7 |
 |:------|:------|:------|:------|:------|:------|:------|:------|
@@ -294,7 +294,41 @@ sudo /sbin/ip link set can0 up type can bitrate 400000
 
 		_Note:_ The Raspberry must recompose the data as a longitude in decimal degrees.
 
+##IMU Measures 
 
+* **From:** NucleoL476
+* **To:** Raspberry Pi
+* **Lenght (Bytes):** 8
+* **Data field:**
+
+* The Acceleration is transmitted in mg and Yaw is transmitted in mdps.
+
+* IMPORTANT: ALL DATAS IN THIS CAN MESSAGE ARE SIGNED INT.
+
+|Byte 0 |Byte 1 |Byte 2 |Byte 3 |Byte 4 |Byte 5 |Byte 6 |Byte 7 |
+|:------|:------|:------|:------|:------|:------|:------|:------|
+| AccX  | AccY  |   -   |   -   | Yaw1  | Yaw0  |   -   |   -   |
+
+* **Acceleration data**
+		The Acceleration data in mg is decomposed as follows: 
+		<Acc_X><Acc_Y>
+
+	* Acc_X.
+		This bit-field corresponds to the acceleration on the x axis. It is a signed integer on 8 bits. (Lateral axis) 
+		
+	* Acc_Y.
+		This bit-field corresponds to the acceleration on the y axis. It is a signed integer on 8 bits. (Longitudinal axis = forward/backward axis of the car) 
+
+* **Yaw data**
+		The yaw data in mdps is a signed integer decomposed as follows: 
+		<Yaw1><Yaw0>
+
+	* Bit 7-0: Yaw1.
+		This bit-field corresponds to the 8 most significant bits of the integer part of the Yaw value.  
+		
+	* Bit 15-8: Yaw0.
+		This bit-field corresponds to the 8 least significant bits of the integer part of the Yaw value.
+ 
 
 ## IDs of the CAN Messages
 
@@ -309,3 +343,4 @@ sudo /sbin/ip link set can0 up type can bitrate 400000
 |Orientation Measures 2 (OM2)|0x1      |0x0        |0x2      |0x102 |
 |Speed&Steering Command (SSC)|0x0      |0x2        |0x0      |0x020 |
 |GPS Lat&Lon DD (GPS)        |0x2      |0x0        |0x0      |0x200 |
+|Acceleration and Yaw (IMU1) |0x2      |0x1        |0x0      |0x200 |
