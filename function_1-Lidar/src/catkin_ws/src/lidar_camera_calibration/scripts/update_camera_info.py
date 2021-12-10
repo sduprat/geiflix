@@ -38,6 +38,7 @@ def load_calibration_data(filename):
     # Open calibration file
     with open(filename, 'r') as stream:
         try:
+            print(filename)
             calibration = yaml.load(stream)
         except yaml.YAMLError as exc:
             rospy.logerr(exc)
@@ -53,6 +54,8 @@ if __name__ == '__main__':
         BAG_FILE = rospy.get_param('filename')
         CALIB_FILE = rospy.get_param('calib_data')
         CAMERA_INFO = rospy.get_param('camera_info')
+
+        print(CAMERA_INFO)
 
     # Get parameters as arguments
     else:
@@ -81,6 +84,7 @@ if __name__ == '__main__':
         if topic == CAMERA_INFO:
             msg.D = calibration['distortion_coefficients']['data']
             msg.K = calibration['camera_matrix']['data']
+            print(msg.K)
             msg.R = calibration['rectification_matrix']['data']
             msg.P = calibration['projection_matrix']['data']
         output.write(topic, msg, msg.header.stamp if msg._has_header else t)

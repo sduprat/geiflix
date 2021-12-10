@@ -5,7 +5,7 @@
 
     <!-- Play rosbag record -->
     <include file="$(find lidar_camera_calibration)/launch/play_rosbag.launch">
-        <arg name="bagfile" value="2021-11-27-13-45-00_updated.bag" />
+        <arg name="bagfile" value="2021-12-04-13-51-31.bag" />
     </include>
 
     <!-- Nodelet manager for this pipeline -->
