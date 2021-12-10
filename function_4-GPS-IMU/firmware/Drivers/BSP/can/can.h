@@ -47,6 +47,9 @@ extern "C" {
 
 typedef void (*CanRxCallback)(CAN_RxHeaderTypeDef *rxHeader, uint8_t data[]);
 
+#define CAN_ID_GPS 	0x200 	// GPS Lat&Long DD
+#define CAN_ID_IMU  0x210	// IMU data (Yaw and Roll at least --> to precise)
+
 /**
  * @brief  Configures the CAN.
  * @param  None

@@ -91,7 +91,7 @@ static CanRxCallback rxCallback=0;
  */
 void CAN_Init(void)
 {
-	CAN_FilterTypeDef  sFilterConfig;
+	//CAN_FilterTypeDef  sFilterConfig;
 
 	hcan.Instance = CANx;
 	hcan.Init.Prescaler = 20;

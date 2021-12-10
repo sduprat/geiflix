@@ -61,7 +61,8 @@ extern CAN_HandleTypeDef hcan;
 /* External variables --------------------------------------------------------*/
 
 /* USER CODE BEGIN EV */
-extern int SEND_CAN;
+extern int SEND_GPS;
+extern int SEND_IMU;
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -188,17 +189,24 @@ void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
   flag_1ms=1;
-  static int cmpt_can = 0;
+  static int cmpt_gps = 0;
+  static int cmpt_imu = 0;
   /* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
   HAL_SYSTICK_IRQHandler();
   /* USER CODE BEGIN SysTick_IRQn 1 */
-  cmpt_can ++;
+  cmpt_gps ++;
+  cmpt_imu ++;
 
-  if (cmpt_can == PERIOD_SEND_MES){
-	SEND_CAN = 1;
-	cmpt_can = 0;
+  if (cmpt_gps == PERIOD_SEND_GPS){
+	SEND_GPS = 1;
+	cmpt_gps = 0;
   }
+  if (cmpt_imu == PERIOD_SEND_IMU){
+  	SEND_IMU = 1;
+  	cmpt_imu = 0;
+  }
+
   /* USER CODE END SysTick_IRQn 1 */
 }
 
