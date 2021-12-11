@@ -57,12 +57,6 @@ UART_HandleTypeDef huart2;
 
 extern CAN_HandleTypeDef     hcan;
 
-int SEND_GPS = 1;
-int SEND_IMU = 1;
-
-uint8_t gps_data[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-uint8_t imu_data[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-
 AHRS_3AxisValues accelerometer;
 AHRS_3AxisValues gyroscope;
 AHRS_3AxisValues magnetometer;
@@ -144,59 +138,9 @@ int main(void)
 
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
-	//uint8_t data[8]={1,2,3,4,5,6,7,8};
-	magnetometer.x = 1.0;
-	accelerometer.x= 1.0;
-	gyroscope.x=1.0;
-
 	while (1)
 	{
 		/* USER CODE END WHILE */
-
-		//eulerangles = AHRS_GetEulerAngles();
-		//AHRS_Update(&accelerometer, &gyroscope, &magnetometer);
-		//printf("%f, %f, %f\n", accelerometer.x, accelerometer.y, accelerometer.z);
-		//printf("%f, %f, %f\n", gyroscope.x, gyroscope.y, gyroscope.z);
-		//swprintf("%f, %f, %f\n", magnetometer.x, magnetometer.y, magnetometer.z);
-
-		/* USER CODE BEGIN 3 */
-		// Envoi des mesures GPS (toutes les 500ms)
-		if (SEND_GPS){
-		    SEND_GPS = 0;
-		    SCHEDULER_Run();
-		    float64_t lat = current_coords.lat;
-		    float64_t lon = current_coords.lon;
-		    float64_t computing = lat;
-		    int Lat3 = floor(computing);
-		    computing = 100.0*(computing-(double)Lat3);
-		    int Lat2 = floor(computing);
-		    computing = 100.0*(computing-(double)Lat2);
-		    int Lat1 = floor(computing);
-		    computing = 100.0*(computing-(double)Lat1);
-		    int Lat0 = floor(computing);
-		    computing = lon;
-		    int Lon3 = floor(computing);
-		    computing = 100.0*(computing-(double)Lon3);
-		    int Lon2 = floor(computing);
-		    computing = 100.0*(computing-(double)Lon2);
-		    int Lon1 = floor(computing);
-		    computing = 100.0*(computing-(double)Lon1);
-		    int Lon0 = floor(computing);
-		    gps_data[0] = Lat3;
-		    gps_data[1] = Lat2;
-		    gps_data[2] = Lat1;
-		    gps_data[3] = Lat0;
-		    gps_data[4] = Lon3;
-		    gps_data[5] = Lon2;
-		    gps_data[6] = Lon1;
-		    gps_data[7] = Lon0;
-		    CAN_Send(gps_data, CAN_ID_GPS);
-		}
-		// Envoi des mesures IMU (toutes les xxxms)
-		if (SEND_IMU){
-			SEND_IMU = 0;
-			CAN_Send(imu_data, CAN_ID_IMU);
-		}
 
 	}
 	/* USER CODE END 3 */
