@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+
+      <!-- Wire static transform from the world to velodyne frame -->
+    <node
+        pkg="tf2_ros"
+        type="static_transform_publisher"
+        name="world_velodyne_tf"
+        output="screen"
+        args="-0.0497178 0.05852865 -0.20228732 -1.1521994669428535 -1.4757474440516494 2.7501533797180113 world velodyne" />
+
+  <node
+    pkg="lidar_detection"
+    type="lidar_transformation.py"
+    name="lidar_transformation"
+    output="screen" />
+
+
+
+
+
+
+</launch>
+
