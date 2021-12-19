@@ -24,7 +24,7 @@ from sensor_msgs.msg import PointCloud2
 from cv_bridge import CvBridge, CvBridgeError
 
 
-pub = rospy.Publisher("rslidar_points_transfo", PointCloud2, queue_size=10)
+pub = rospy.Publisher("rslidar_points_transfo", PointCloud2, queue_size=1)
 CV_BRIDGE = CvBridge()
 
 
@@ -48,7 +48,6 @@ def callback(lidar):
     global TF_BUFFER, TF_LISTENER
 
     # TF listener
-    rospy.loginfo('Setting up static transform listener')
     TF_BUFFER = tf2_ros.Buffer()
     TF_LISTENER = tf2_ros.TransformListener(TF_BUFFER)
 

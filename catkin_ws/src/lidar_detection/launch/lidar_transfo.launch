@@ -11,14 +11,15 @@
 
   <node
     pkg="lidar_detection"
-    type="lidar_transformation.py"
-    name="lidar_transformation"
+    type="lidar_detection.py"
+    name="lidar_detection"
     output="screen" />
 
-
-
-
-
+   <node
+     pkg="lidar_detection"
+     type="lidar_3d_to_2d.py"
+     name="lidar_3d_to_2d"
+     output="screen" />
 
 </launch>
 
