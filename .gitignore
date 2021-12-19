@@ -92,3 +92,11 @@ __pycache__/
 *.gif
 *.ico
 
+
+*/build
+*/devel
+
+bagfiles
+
+
+
