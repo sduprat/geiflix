@@ -3,33 +3,67 @@ import folium
 import os
 from folium import IFrame
 import base64
+import json
+import time
+
+alist0=[43.57076, 1.46604] #Actual coordiantes of GEI at INSA.
 
 app = Flask(__name__)
 
 @app.route("/map_fire")
 def base():
-    map = folium.Map(
-    	location=[43.57076, 1.46605],
-        zoom_start = 12
-    )
-    
-    Filename ='images/fire.jpeg'
-    encoded = base64.b64encode(open(Filename, 'rb').read())
-    html='<img src="data:image/jpeg;base64,{}">'.format 
-    resolution, width, height = 75, 50, 5
-    iframe = IFrame(html(encoded.decode('UTF-8')), width=(width*resolution) + 20, height=(height*resolution) + 20)
-    popup = folium.Popup(iframe, max_width= 500)
+    aliste=[]
+    with open("fire_coord.txt", "r") as data_file: #Opening of the file containing coordinates of the fire detected
+        while 1:
+           where = data_file.tell() #Get the current position of the cursor
+           line = data_file.readline() #Read the current line (next line)
+           where = data_file.tell()
+           if not line:
+               time.sleep(1)
+               data_file.seek(0,2) #Go to to the end of the file
+                
+           else:
+               aliste = json.loads(line) #Convert a string format list into a real list
+               print(aliste)
+               if aliste != alist0: #If a fire is detected.
+                   map = folium.Map(
+                        location = aliste,
+                        zoom_start = 12
+                   )                    #Create the base of the map
+                   Filename ='images/fire.jpeg'
+                   encoded = base64.b64encode(open(Filename, 'rb').read())
+                   html='<img src="data:image/jpeg;base64,{}">'.format 
+                   resolution, width, height = 75, 50, 5
+                   iframe = IFrame(html(encoded.decode('UTF-8')), width=(width*resolution) + 20, height=(height*resolution) + 20)
+                   popup = folium.Popup(iframe, max_width= 500)
+                   
+                   #The previous lines allow the possibility to put an image as a popup.
 
-    folium.Marker(
-	location=[43.57076, 1.46605],
-    zoom_start = 12,
-	#popup= '<img src="fire.jpeg"/>',
-    popup=popup,
-	tooltip="Fire Alert",
-	icon=folium.Icon(color="red", icon="fire")
-    ).add_to(map)
+                   folium.Marker(
+                   location = aliste,
+                   zoom_start = 12,
+                   popup=popup,
+                   tooltip="Fire Alert",
+                   icon=folium.Icon(color="red", icon="fire")
+                   ).add_to(map) #Put an marker in the current position.
+                   print(aliste)
+                   return map._repr_html_() #Create an internal HTML file which is automatically show in output.
+               else: #In case of no fire detected
+                   map = folium.Map(
+                        location = aliste,
+                        zoom_start = 15
+                   )
 
-    return map._repr_html_()
+                   folium.Marker(
+                   location = aliste,
+                   zoom_start = 15,
+                   popup="<b>Welcom to Zilly localization. No fire detected</b>",
+                   tooltip="No fire detected",
+                   icon=folium.Icon(color="green", icon="cloud")
+                   ).add_to(map)
+                   print(aliste)
+                   return map._repr_html_()
+                    
 
 if __name__ == "__main__":
 	app.run(debug=True)
