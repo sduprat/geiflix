@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 @app.route("/<coor>")
 def coord(coor):
-    return render_template("index.html", coordinates = coor)
+   return render_template("map.html", coordinates = coor)
 
 @app.route("/pi", methods = ["POST", "GET"]) 
 def pi():
@@ -23,10 +23,12 @@ def pi():
         pi_data = None
         with open("data.txt", "r") as data_file:
              pi_data = data_file.read()
+             print(pi_data[-1])
              temp1 = pi_data.split("{")
              temp2 = temp1[-1].split("}")
              last_value = temp2[0] 
-        return redirect(url_for("coord", coor = last_value))
+             print(f"lassssst value : {last_value}")
+        return redirect(url_for("coord", coor = "{" + last_value + "}"))
 
 #@app.before_first_request
 #def before_first_request():
