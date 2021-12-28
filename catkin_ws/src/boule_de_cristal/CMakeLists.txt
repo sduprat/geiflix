@@ -26,6 +26,7 @@ find_package(Qt5Widgets REQUIRED)
 QT5_WRAP_CPP(myMOC 
   include/${PROJECT_NAME}/main_window.hpp 
   include/${PROJECT_NAME}/qnode.hpp
+  include/${PROJECT_NAME}/image_node.hpp
 )
 QT5_WRAP_UI(myUIC ui/main_window.ui)
 
@@ -33,6 +34,7 @@ set(SRC_FILES
   src/main.cpp
   src/main_window.cpp
   src/qnode.cpp
+  src/image_node.cpp
 )
 
 
@@ -42,7 +44,7 @@ set(SRC_FILES
 # Since the default here is to produce only a binary, we don't worry about
 # exporting anything. 
 catkin_package(
-  CATKIN_DEPENDS qt_build roscpp std_msgs  
+  CATKIN_DEPENDS qt_build roscpp std_msgs cv_bridge image_transport sensor_msgs
 )
 
 

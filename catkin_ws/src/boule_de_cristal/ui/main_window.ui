@@ -255,9 +255,9 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton">
+         <widget class="QPushButton" name="button_image">
           <property name="text">
-           <string>Voir caméra</string>
+           <string>Voir camera</string>
           </property>
          </widget>
         </item>

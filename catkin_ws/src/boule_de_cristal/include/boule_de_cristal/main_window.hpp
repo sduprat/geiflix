@@ -14,6 +14,7 @@
 
 #include <QMainWindow>
 #include "boule_de_cristal/ui_main_window.h"
+#include "image_node.hpp"
 #include "qnode.hpp"
 
 /*****************************************************************************
@@ -29,38 +30,41 @@ namespace boule_de_cristal {
  * @brief Qt central, all operations relating to the view part here.
  */
 class MainWindow : public QMainWindow {
-Q_OBJECT
+  Q_OBJECT
 
-public:
-	MainWindow(int argc, char** argv, QWidget *parent = 0);
-	~MainWindow();
+ public:
+  MainWindow(int argc, char **argv, QWidget *parent = 0);
+  ~MainWindow();
 
-	void ReadSettings(); // Load up qt program settings at startup
-	void WriteSettings(); // Save qt program settings when closing
+  void ReadSettings();   // Load up qt program settings at startup
+  void WriteSettings();  // Save qt program settings when closing
 
-	void closeEvent(QCloseEvent *event); // Overloaded function
-	void showNoMasterMessage();
+  void closeEvent(QCloseEvent *event);  // Overloaded function
+  void showNoMasterMessage();
 
-public Q_SLOTS:
-	/******************************************
-	** Auto-connections (connectSlotsByName())
-	*******************************************/
-	void on_actionAbout_triggered();
-	void on_button_connect_clicked(bool check );
-    void on_button_list_clicked(bool check );
-	void on_checkbox_use_environment_stateChanged(int state);
+ public Q_SLOTS:
+  /******************************************
+  ** Auto-connections (connectSlotsByName())
+  *******************************************/
+  void on_actionAbout_triggered();
+  void on_button_connect_clicked(bool check);
+  void on_button_list_clicked(bool check);
+  void on_checkbox_use_environment_stateChanged(int state);
+  void on_button_image_clicked(bool checked);
 
-    /******************************************
-    ** Manual connections
-    *******************************************/
-    void updateLoggingView(); // no idea why this can't connect automatically
+  /******************************************
+  ** Manual connections
+  *******************************************/
+  void updateLoggingView();  // no idea why this can't connect automatically
 
+ private slots:
 
-private:
-	Ui::MainWindowDesign ui;
-	QNode qnode;
+ private:
+  Ui::MainWindowDesign ui;
+  QNode qnode;
+  ImageNode * imageNode ;
 };
 
 }  // namespace boule_de_cristal
 
-#endif // boule_de_cristal_MAIN_WINDOW_H
+#endif  // boule_de_cristal_MAIN_WINDOW_H

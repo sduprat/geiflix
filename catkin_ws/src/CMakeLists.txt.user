@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 4.5.2, 2021-12-21T16:13:24. -->
+<!-- Written by QtCreator 4.5.2, 2021-12-28T09:13:51. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -221,7 +221,7 @@
     <value type="QString" key="CMakeProjectManager.CMakeRunConfiguation.Title">boule_de_cristal</value>
     <value type="QString" key="CMakeProjectManager.CMakeRunConfiguration.Arguments"></value>
     <value type="QString" key="CMakeProjectManager.CMakeRunConfiguration.UserWorkingDirectory"></value>
-    <value type="QString" key="CMakeProjectManager.CMakeRunConfiguration.UserWorkingDirectory.default">/home/pierre/Projet/geiflix/catkin_ws/build/devel/lib/boule_de_cristal</value>
+    <value type="QString" key="CMakeProjectManager.CMakeRunConfiguration.UserWorkingDirectory.default">/home/pierre/Projet/geiflix/catkin_ws/devel/lib/boule_de_cristal</value>
     <value type="int" key="PE.EnvironmentAspect.Base">2</value>
     <valuelist type="QVariantList" key="PE.EnvironmentAspect.Changes"/>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName">boule_de_cristal</value>
