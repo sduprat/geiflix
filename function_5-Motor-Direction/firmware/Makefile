@@ -1,5 +1,5 @@
 
-FRAMAC_OPT = -machdep x86_32 -eva-context-valid-pointers -cpp-command "gcc -E -IInc -IDrivers/STM32F1xx_HAL_Driver/Inc/ -IInc -IDrivers/STM32F1xx_HAL_Driver/Inc/Legacy -IDrivers/CMSIS/Device/ST/STM32F1xx/Include/ -IDrivers/CMSIS/Include/ -DUSE_FULL_LL_DRIVE -D_TIMEVAL_DEFINED -D_SYS_TIME_H_ -DSTM32F103xB -m32"
+FRAMAC_OPT = -machdep x86_32 -eva-context-valid-pointers -cpp-command "gcc -E -C -IInc -IDrivers/STM32F1xx_HAL_Driver/Inc/ -IInc -IDrivers/STM32F1xx_HAL_Driver/Inc/Legacy -IDrivers/CMSIS/Device/ST/STM32F1xx/Include/ -IDrivers/CMSIS/Include/ -DUSE_FULL_LL_DRIVE -D_TIMEVAL_DEFINED -D_SYS_TIME_H_ -DSTM32F103xB -m32"
 
 PCGE_DIR = ~/Tools/PCGE
 
