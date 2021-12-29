@@ -46,7 +46,23 @@ make eva_main
 ## Launch analysis on steering_Init()
 
 Launch analysis and explain `eva` error messages.
-Add contracts (requires and ensures) to limits ranges of values.
+Add contracts (requires and ensures) to limits ranges of in put and output values for different functions.
+
+<em>Relaunch analysis, explain.</em>
+
+Add a function contract to `steering_get_angle` with an ensure to express that valeus of ADCBUF are on 12 bits (see comments in main.c`).
+
+<em>Relaunch analysis, explain.</em>
+
+## Launch analysis on main()
+
+<em>Relaunch analysis, explain.</em>
+
+<em>See ranges of output variables at the end of the console, check if values are correct (with functional, software, hardawre requirements) </em>
+
+## Conclusion
+<em>In your opinion, what can be the benefits of this verification regarding global objectives of Safety ? </em>
+
 
 
 
