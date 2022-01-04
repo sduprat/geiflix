@@ -12,7 +12,7 @@ Plugin PCGE is an external plugin called with the option `-load-script $(PCGE_DI
 ## Graphs
 Generate module dependencies graph and function call graph :
 ``` shell
-make graph
+make graphs
 firefox *.svg
 ```
 `SRC_C` variable in the `Makefile` can be modified to select source files
