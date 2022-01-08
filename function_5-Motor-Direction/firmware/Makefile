@@ -25,4 +25,4 @@ graphs	:
 	dot -Tsvg -o f.svg f.dot
 
 metrics	:
-	frama-c -load-script $(PCGE_DIR)/plug.ml $(FRAMAC_OPT)  $(SRC_C) -pcg-comment -pcg-comments f1.csv
+	frama-c -load-script $(PCGE_DIR)/plug.ml -keep-comments $(FRAMAC_OPT)  $(SRC_C) -pcg-comment -pcg-comments f1.csv
