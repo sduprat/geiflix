@@ -1,7 +1,7 @@
 # Prerequisites
 
-* place into the workig directory `geiflix/function_5-Motor-Direction/firmware`
-* install external plugin (PCGE)
+* place into the working directory `geiflix/function_5-Motor-Direction/firmware`
+* install external plugin (PCGE - [https://github.com/sduprat/PCGE](https://github.com/sduprat/PCGE))
 ``` shell
 make install_pcge
 ```
@@ -18,6 +18,12 @@ firefox *.svg
 `SRC_C` variable in the `Makefile` can be modified to select source files
 
 <em>Present graphs of your project</em>
+
+other : one graph per module :
+```shell
+make all_dot
+make all_svg
+```
 
 ## Metrics
 Generate metrics per function (nb locs, nb comments, max depth in structure control)
@@ -63,6 +69,14 @@ Add a function contract to `steering_get_angle` with an ensure to express that v
 ## Conclusion
 <em>In your opinion, what can be the benefits of this verification regarding global objectives of Safety ? </em>
 
+## Bonus (unit tests)
+To launch unit test :
+```shell
+make cm_test1
+```
+To do:
+- study logic of mock and wrap mocked functions
+- complete tests
 
 
 
