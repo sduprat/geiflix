@@ -1,5 +1,9 @@
 # Prerequisites
 
+* clone branch ansta of the repo : `git clone -b anasta https://github.com/sduprat/geiflix.git`
+``` shell
+git clone -b anasta https://github.com/sduprat/geiflix.git
+```
 * place into the working directory `geiflix/function_5-Motor-Direction/firmware`
 * install external plugin (PCGE - [https://github.com/sduprat/PCGE](https://github.com/sduprat/PCGE))
 ``` shell
@@ -13,6 +17,8 @@ Plugin PCGE is an external plugin called with the option `-load-script $(PCGE_DI
 Generate module dependencies graph and function call graph :
 ``` shell
 make graphs
+```
+``` shell
 firefox *.svg
 ```
 `SRC_C` variable in the `Makefile` can be modified to select source files
