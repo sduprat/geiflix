@@ -52,7 +52,7 @@ make eva_main
 ## Launch analysis on steering_Init()
 
 Launch analysis and explain `eva` error messages.
-Add contracts (requires and ensures) to limits ranges of in put and output values for different functions.
+Add contracts (requires and ensures) to limit ranges of input and output values for different functions. For that, design a model with callgraph reprensentation and define for each functions functional limits of input and output values. Then, report theses values through function contracts with requires and ensures.
 
 <em>Relaunch analysis, explain.</em>
 
